@@ -1,0 +1,7 @@
+{
+  "name": "fifoLogin",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue"
+}
