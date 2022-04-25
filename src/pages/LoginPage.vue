@@ -1,0 +1,75 @@
+<template>
+    <master-layout pageTitle="Login Form">
+        <ion-card>
+            <ion-card-header>
+                <ion-card-title>SignIn</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+                <ion-item>
+                    <ion-label position="floating">User Name</ion-label>
+                    <ion-input v-model="userInfo.username"></ion-input>
+                </ion-item>
+                <ion-item>
+                    <ion-label position="floating">Password</ion-label>
+                    <ion-input type="password" v-model="userInfo.password"></ion-input>
+                </ion-item>
+                <ion-button expand="full" @click="login()">Login</ion-button>
+            </ion-card-content>
+        </ion-card>
+    </master-layout>
+</template>
+
+<script>
+
+import { IonCard,IonCardHeader,IonCardTitle,IonCardContent,IonItem,IonLabel,IonInput,IonButton } from "@ionic/vue";
+import { mapGetters } from "vuex";
+import {ref} from 'vue';
+import { useStore } from 'vuex'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+
+
+export default {
+    components: {
+            IonCard,IonCardHeader,IonCardTitle,IonCardContent,IonItem,IonLabel,IonInput,IonButton
+    },
+    computed:{
+        ...mapGetters("auth", {
+        loginStatus: "getLoginStatus",
+        }),
+    },
+    setup () {
+
+        const router = useRouter()
+
+
+        const store = useStore()
+
+        const loginStatus = computed(() => store.getters.getLoginStatus)
+
+        const userInfo = ref({
+                username: "",
+                password: "",
+            });
+
+        const login = async () => {
+                if (userInfo.value.username && userInfo.value.password){
+                    await store.dispatch("loginUser",userInfo);
+                    if(loginStatus.value === "success"){
+                        alert('login success');
+                        router.push({path:'/dashboard'})
+                    }else{
+                        alert('failed to login')
+                    }
+                }
+            }
+        
+
+            return {userInfo,login}
+        }
+}
+</script>
+
+<style lang="scss" scoped>
+
+</style>
