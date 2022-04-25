@@ -28,7 +28,7 @@ export default {
 
         const store = useStore()
         
-        const authData = computed(() => store.getters.getAuthData)
+        const authData = computed(() => store.getters.auth.getAuthData)
 
         return {authData}
     }

@@ -39,11 +39,11 @@ function guard(to, from, next, authData) {
 }
 
 router.beforeEach((to, from, next) => {
-  let authData = store.getters.getAuthData;
+  let authData = store.getters['auth/getAuthData'];
   if (authData.userId == 0) {
-    store.dispatch("loadStorageTokens").then(
+    store.dispatch("auth/loadStorageTokens").then(
       () => {
-        authData = store.getters.getAuthData;
+        authData = store.getters['auth/getAuthData'];
         return guard(to, from, next, authData);
       },
       () => {
