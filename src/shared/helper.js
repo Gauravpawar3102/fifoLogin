@@ -9,6 +9,7 @@ export function jwtDecrypt(token) {
         })
         .join("")
     );
+
    
     return JSON.parse(jsonPayload);
   }

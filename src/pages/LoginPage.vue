@@ -6,8 +6,8 @@
             </ion-card-header>
             <ion-card-content>
                 <ion-item>
-                    <ion-label position="floating">User Name</ion-label>
-                    <ion-input v-model="userInfo.username"></ion-input>
+                    <ion-label position="floating">Phone Number</ion-label>
+                    <ion-input v-model="userInfo.phoneNumber"></ion-input>
                 </ion-item>
                 <ion-item>
                     <ion-label position="floating">Password</ion-label>
@@ -45,15 +45,15 @@ export default {
 
         const store = useStore()
 
-        const loginStatus = computed(() => store.getters.auth.getLoginStatus)
+        const loginStatus = computed(() => store.getters['auth/getLoginStatus'])
 
         const userInfo = ref({
-                username: "",
+                phoneNumber: "",
                 password: "",
             });
 
         const login = async () => {
-                if (userInfo.value.username && userInfo.value.password){
+                if (userInfo.value.phoneNumber && userInfo.value.password){
                     await store.dispatch("auth/loginUser",userInfo);
                     if(loginStatus.value === "success"){
                         alert('login success');

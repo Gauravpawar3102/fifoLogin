@@ -8,29 +8,58 @@
         <ion-card-content>
             <ion-item>
                 <ion-label>Owner Name:</ion-label>
-                <ion-label>{{ authData.userName }}</ion-label>
+                <ion-label>{{ userData.first_name + " " + userData.last_name }}</ion-label>
             </ion-item>
+            <ion-item v-if="userData.partnerBrand">
+                <ion-label>PartnerBrand:</ion-label>
+                <ion-label>{{ userData.partnerBrand.name }}</ion-label>
+            </ion-item>
+            <ion-item>
+                <ion-label>Partner Type:</ion-label>
+                <ion-label>{{ userData.partnerType }}</ion-label>
+            </ion-item>
+            <ion-item v-if="userData.partnerWorkingForKitchen">
+                <ion-label>PartnerKitchen:</ion-label>
+                <ion-label class="ion-text-wrap">{{ userData.partnerWorkingForKitchen.name }}</ion-label>
+            </ion-item>
+            <ion-button @click="logoutUser()">Logout</ion-button>
         </ion-card-content>
     </master-layout>
 </template>
 
 <script>
 
-import { IonCard,IonCardHeader,IonCardTitle,IonCardContent,IonItem,IonLabel,} from "@ionic/vue";
+import { IonCard,IonCardHeader,IonCardTitle,IonCardContent,IonItem,IonLabel,IonButton} from "@ionic/vue";
 import { useStore } from 'vuex'
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import {ref, onMounted} from 'vue'
 
 export default {
     components: {
-        IonCard,IonCardHeader,IonCardTitle,IonCardContent,IonItem,IonLabel,
+        IonCard,IonCardHeader,IonCardTitle,IonCardContent,IonItem,IonLabel,IonButton,
     },
     setup () {
 
         const store = useStore()
-        
-        const authData = computed(() => store.getters.auth.getAuthData)
 
-        return {authData}
+        const router = useRouter()
+        
+        const authData = computed(() => store.getters['auth/getAuthData'])
+
+        const userData = ref("")
+
+        const logoutUser = async () => {
+            await store.dispatch("auth/logoutUser")
+            router.push({path:'/login'})
+        }
+
+        onMounted(async () => {
+            await store.dispatch("auth/getUserData")
+            userData.value = store.getters["auth/getUserData"]
+        })
+
+        return {authData,logoutUser, userData}
     }
 }
 </script>
