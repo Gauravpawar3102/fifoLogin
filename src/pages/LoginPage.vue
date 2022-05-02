@@ -57,7 +57,7 @@ export default {
                     await store.dispatch("auth/loginUser",userInfo);
                     if(loginStatus.value === "success"){
                         alert('login success');
-                        router.push({path:'/dashboard'})
+                        router.push({path:'/tabs/tab2'})
                     }else{
                         alert('failed to login')
                     }

@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import LoginPage from '../pages/LoginPage.vue';
-import DashboardPage from '../pages/DashboardPage.vue'
+// import DashboardPage from '../pages/DashboardPage.vue'
 import store from '../store/index';
+import TabsPage from '../pages/TabsPage.vue'
 
 const routes = [
   {
@@ -13,10 +14,24 @@ const routes = [
     component: LoginPage
   },
   {
-    path: '/dashboard',
-    component: DashboardPage,
-    meta: {requiredAuth: true}
-  },
+    path: '/tabs/',
+    component: TabsPage,
+    meta: {requiredAuth: true},
+    children: [
+      {
+        path:'',
+        redirect: '/tabs/tab2'
+      },
+      {
+        path: 'tab1',
+        component: () => import('@/pages/DashboardPage.vue')
+      },
+      {
+        path: 'tab2',
+        component: () => import('@/pages/ScannerPage.vue')
+      },
+    ]
+  }
 ]
 
 const router = createRouter({
@@ -32,7 +47,7 @@ function guard(to, from, next, authData) {
     return next({ path: "/login" });
   } else {
     if (authData && authData.userId > 0) {
-      return next({ path: "/dashboard" });
+      return next({ path: "/tabs/tab2" });
     }
     return next();
   }
