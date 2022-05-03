@@ -1,11 +1,11 @@
 <template>
-  <ion-page class="colorThis" v-if="!showOrNot">
-    <ion-header v-if="!showOrNot" class="colorThis">
+  <ion-page>
+    <ion-header v-if="!showOrNot">
       <ion-toolbar>
         <ion-title>Input/Output Scan</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true" v-if="!showOrNot" class="colorThis">
+    <ion-content :fullscreen="true" v-if="!showOrNot">
       <ion-header collapse="condense">
         <ion-toolbar>
           <ion-title size="large">Input/Output Scan</ion-title>
@@ -17,9 +17,6 @@
       <div >{{res}}</div>
     </ion-content>
 
-    <div v-if="showOrNot" class="colorThis">
-      <button @click="stopScan">StopScan</button>
-    </div>
     
   </ion-page>
 </template>
@@ -43,6 +40,7 @@ export default  defineComponent({
       showOrNot.value = true;
       res.value = ""
       BarcodeScanner.hideBackground(); // make background of WebView transparent
+      document.body.style.background = "transparent";
 
       const result = await BarcodeScanner.startScan(); // start scanning and wait for a result
 
@@ -81,8 +79,4 @@ export default  defineComponent({
 });
 </script>
 
-<style scoped>
-  .colorThis {
-    background-color: rgba(255 , 0, 0, 0.5);
-  }
-</style>
+
