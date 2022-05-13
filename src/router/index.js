@@ -3,6 +3,7 @@ import LoginPage from '../pages/LoginPage.vue';
 // import DashboardPage from '../pages/DashboardPage.vue'
 import store from '../store/index';
 import TabsPage from '../pages/TabsPage.vue'
+// import ScanPage from '../pages/ScanPage.vue'
 
 const routes = [
   {
@@ -12,6 +13,11 @@ const routes = [
   {
     path: '/login',
     component: LoginPage
+  },
+  {
+    path: '/scan',
+    component: () => import('@/pages/ScanPage.vue'),
+    meta: {requiredAuth: true},
   },
   {
     path: '/tabs/',

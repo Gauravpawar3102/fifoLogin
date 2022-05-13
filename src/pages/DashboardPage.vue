@@ -32,7 +32,7 @@
 import { IonCard,IonCardHeader,IonCardTitle,IonCardContent,IonItem,IonLabel,IonButton} from "@ionic/vue";
 import { useStore } from 'vuex'
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import {ref, onMounted} from 'vue'
 
 export default {
@@ -56,8 +56,12 @@ export default {
 
         onMounted(async () => {
             await store.dispatch("auth/getUserData")
+            console.log("We are here right now")
             userData.value = store.getters["auth/getUserData"]
+            console.log(userData.value)
         })
+
+        onBeforeRouteLeave(() => { userData.value = store.getters["auth/getUserData"]})
 
         return {authData,logoutUser, userData}
     }

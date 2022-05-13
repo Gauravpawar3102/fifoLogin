@@ -7,11 +7,15 @@
             <ion-card-content>
                 <ion-item>
                     <ion-label position="floating">Phone Number</ion-label>
-                    <ion-input v-model="userInfo.phoneNumber"></ion-input>
+                    <div>
+                        <ion-input v-model="userInfo.phoneNumber" autocomplete="username"></ion-input>
+                    </div>
                 </ion-item>
                 <ion-item>
                     <ion-label position="floating">Password</ion-label>
-                    <ion-input type="password" v-model="userInfo.password"></ion-input>
+                    <div>
+                        <ion-input type="password" v-model="userInfo.password" autocomplete="current-password"></ion-input>
+                    </div>
                 </ion-item>
                 <ion-button expand="full" @click="login()">Login</ion-button>
             </ion-card-content>

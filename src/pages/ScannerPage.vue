@@ -13,7 +13,8 @@
       </ion-header>
 
       <ion-button @click="checkPermission">GrantPerm</ion-button>
-      <ion-button @click="startScan">StartScan</ion-button>
+      <ion-button @click="startScan('in')">InputScan</ion-button>
+      <ion-button @click="startScan('out')">OutputScan</ion-button>
       <div >{{res}}</div>
     </ion-content>
 
@@ -22,37 +23,46 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue';
+import { defineComponent, onMounted, } from 'vue';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton } from '@ionic/vue';
-import {ref} from 'vue';
+import {ref,} from 'vue';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
+import {useRouter} from 'vue-router'
+import { useStore } from 'vuex'
+
 
 
 export default  defineComponent({
-  name: 'Tab1Page',
+  name: 'ScannerPage',
   components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage ,IonButton},
   setup(){
-    const res = ref("Blank");
+
+    const inOrOut = ref("nothing")
+
+    const res = ref("blank");
 
     const showOrNot = ref(false);
 
-    const startScan = async () => {
-      showOrNot.value = true;
-      res.value = ""
-      BarcodeScanner.hideBackground(); // make background of WebView transparent
-      document.body.style.background = "transparent";
+    const router = useRouter();
 
-      const result = await BarcodeScanner.startScan(); // start scanning and wait for a result
+    const store = useStore();
 
-      // if the result has content
-      if (result.hasContent) {
-        console.log(result.content); // log the raw scanned content
-        res.value = result.content;
-      }
-      if (res.value){
-        await stopScan();
-      }
+    onMounted(async () => {
+        await store.dispatch("auth/getUserData")
+    });
+
+    
+
+    
+
+    const startScan = async (inOut) => {
+      inOrOut.value = inOut
+      await store.dispatch("apis/setInOrOut",inOut);
+      await store.dispatch("apis/setQrCode","");
+      console.log("ssup")
+      router.push({path:'/scan'})
     };
+
     const checkPermission = async () => {
       const status = await BarcodeScanner.checkPermission({ force: true });
 
@@ -65,8 +75,8 @@ export default  defineComponent({
     };
     const stopScan = async () => {
       showOrNot.value = false
-      BarcodeScanner.showBackground();
-      BarcodeScanner.stopScan();
+      await BarcodeScanner.showBackground();
+      await BarcodeScanner.stopScan();
     };
     return {
       startScan,
@@ -74,6 +84,7 @@ export default  defineComponent({
       checkPermission,
       res,
       showOrNot,
+      inOrOut
     }
   }
 });

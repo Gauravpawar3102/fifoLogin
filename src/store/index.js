@@ -1,9 +1,11 @@
 import { createStore } from 'vuex';
 import auth from './modules/auth';
+import apis from './modules/apis'
 
 const store = createStore({
   modules:{
-    auth:auth
+    auth:auth,
+    apis:apis
   }
 });
 
