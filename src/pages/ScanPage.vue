@@ -17,7 +17,7 @@
 
 <script>
 import { computed, defineComponent, onMounted } from 'vue';
-import { IonPage,alertController } from '@ionic/vue';
+import { IonPage,alertController,loadingController} from '@ionic/vue';
 import {ref} from 'vue';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import {useRouter,onBeforeRouteLeave,} from 'vue-router'
@@ -95,11 +95,14 @@ export default  defineComponent({
 
                 console.log("waddup: ",JSON.stringify(retVal))
                 const response = await axios.post("https://fifo-update.cokit.tech/fifo/inputScan", retVal);
+                const loading = await presentLoading();
                 resval.value = response.status
                 console.log("response text: ",response.data)
                 if(response.data == 'Already EXISTS'){
+                  loading.dismiss()
                   await existsAlert()
                 }else if(response.status == 200 || response.status == 201){
+                  loading.dismiss()
                   await successAlert()
                 }
             }else if (inOrOut.value == 'out'){
@@ -127,7 +130,7 @@ export default  defineComponent({
     const existsAlert = async () => {
       const alert = await alertController
         .create({
-          cssClass: 'my-custom-class',
+          cssClass: 'exists-alert',
           header: 'Alert',
           subHeader: 'Already Exists',
           message: 'The packet was already scanned',
@@ -142,7 +145,7 @@ export default  defineComponent({
     const successAlert = async () => {
       const alert = await alertController
         .create({
-          cssClass: 'my-custom-class',
+          cssClass: 'success-alert',
           header: 'Alert',
           subHeader: 'Success',
           message: 'Successfully Scanned',
@@ -152,6 +155,17 @@ export default  defineComponent({
 
       const { role } = await alert.onDidDismiss();
       console.log('onDidDismiss resolved with role', role);
+    }
+
+    const presentLoading = async () => {
+      const loading = await loadingController
+        .create({
+          cssClass: 'loading-spinner',
+          message: 'Please wait...',
+        });
+        
+      await loading.present();
+      return loading
     }
 
     const checkPermission = async () => {
@@ -273,6 +287,17 @@ export default  defineComponent({
         100% {
           transform: translate(0, 0) rotate(0deg) scale(1);
         }
+      }
+
+
+      
+</style>
+<style>
+      .exists-alert{
+        --background: rgb(255,255,0);
+      }
+      .success-alert{
+        --background: rgb(3, 249, 3);
       }
 </style>
 

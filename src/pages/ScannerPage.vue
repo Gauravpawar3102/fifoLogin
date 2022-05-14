@@ -11,11 +11,13 @@
           <ion-title size="large">Input/Output Scan</ion-title>
         </ion-toolbar>
       </ion-header>
-
-      <ion-button @click="checkPermission">GrantPerm</ion-button>
-      <ion-button @click="startScan('in')">InputScan</ion-button>
-      <ion-button @click="startScan('out')">OutputScan</ion-button>
-      <div >{{res}}</div>
+      <div class="cntrcntr">
+        <div class="cntr">
+          <ion-button @click="startScan('in')">InputScan</ion-button>
+          <ion-button @click="startScan('out')">OutputScan</ion-button>
+          <ion-button @click="checkPermission">GrantPerm</ion-button>
+        </div>
+      </div>
     </ion-content>
 
     
@@ -89,5 +91,19 @@ export default  defineComponent({
   }
 });
 </script>
+
+<style scoped>
+  .cntrcntr{
+    display: flex;
+    justify-content: space-around;
+    height: 100%;
+  }
+  .cntr{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 60%;
+  }
+</style>
 
 
