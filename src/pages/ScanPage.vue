@@ -124,8 +124,11 @@ export default  defineComponent({
 
                 console.log("waddup: ",JSON.stringify(retVal))
                 const response = await axios.post("https://fifo-update.cokit.tech/fifo/outputScan", retVal);
+                const loading = await presentLoading();
                 resval.value = response.status
                 console.log(resval.value)
+                loading.dismiss()
+                await successAlert()
             }
         }
       }
@@ -163,6 +166,8 @@ export default  defineComponent({
       const { role } = await alert.onDidDismiss();
       console.log('onDidDismiss resolved with role', role);
     }
+
+    
 
     const presentLoading = async () => {
       const loading = await loadingController

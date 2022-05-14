@@ -63,22 +63,25 @@ const mutations= {
 
 const actions = {
     loginUser : async ({commit},payload) => {
-        const response = await axios.post("https://fifo-update.cokit.tech/auth/jwt/create/", payload.value);
 
+        try {
+          const response = await axios.post("https://fifo-update.cokit.tech/auth/jwt/create/", payload.value);
+          console.log(response.data)
+          if (response.status == 200 || response.status == 201){
+            await Storage.set({
+              key: "access_token",
+              value: response.data.access
+            });
+            await Storage.set({
+              key: "refresh_token",
+              value: response.data.refresh
+            });
 
-        if (response.status == 200 || response.status == 201){
-          await Storage.set({
-            key: "access_token",
-            value: response.data.access
-          });
-          await Storage.set({
-            key: "refresh_token",
-            value: response.data.refresh
-          });
-
-          commit('saveAuthToken', response.data);
-          commit('saveLoginStatus', 'success');
-        } else {
+            commit('saveAuthToken', response.data);
+            commit('saveLoginStatus', 'success');
+          }
+        } catch(error){
+          console.log(error.response.data);
           commit("saveLoginStatus", "failed");
         }
       },

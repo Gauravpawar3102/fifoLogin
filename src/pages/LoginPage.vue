@@ -63,7 +63,7 @@ export default {
                         alert('login success');
                         router.push({path:'/tabs/tab2'})
                     }else{
-                        alert('failed to login')
+                        alert('Login Failed - Check your Credentials')
                     }
                 }
             }
