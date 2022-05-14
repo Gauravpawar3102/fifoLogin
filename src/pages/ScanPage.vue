@@ -1,5 +1,5 @@
 <template>
-  <ion-page>
+  <ion-page :key="{keyVal}">
     <div class="container">
       <div class="barcode-scanner--area--container">
         <div class="relative">
@@ -16,7 +16,7 @@
 </template>
 
 <script>
-import { computed, defineComponent, onMounted } from 'vue';
+import { computed, defineComponent, onMounted, onUnmounted, onUpdated } from 'vue';
 import { IonPage,alertController,loadingController} from '@ionic/vue';
 import {ref} from 'vue';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
@@ -37,6 +37,8 @@ export default  defineComponent({
 
     const resval = ref("blank");
 
+    const keyVal = ref(1);
+
 
     const showOrNot = ref(false);
 
@@ -45,6 +47,11 @@ export default  defineComponent({
     const store = useStore()
 
     onMounted(async () => {await startScan()})
+
+    onUpdated(async () => {await startScan()})
+
+    onUnmounted(async () => {await BarcodeScanner.stopScan()})
+
 
     onBeforeRouteLeave(async () => { await stopScanBack()})
 
@@ -182,22 +189,31 @@ export default  defineComponent({
       showOrNot.value = false
       await BarcodeScanner.showBackground();
       await BarcodeScanner.stopScan();
+      keyVal.value += 1;
+    };
+    const stopScanBtn = async () => {
+      showOrNot.value = false
+      await BarcodeScanner.showBackground();
+      await BarcodeScanner.stopScan();
       router.replace({path:'/tabs/tab2'})
     };
     const stopScanBack = async () => {
       showOrNot.value = false
       BarcodeScanner.showBackground();
       await BarcodeScanner.stopScan();
+      await BarcodeScanner.stopScan();
     };
     return {
       startScan,
+      stopScanBtn,
       stopScan,
       checkPermission,
       existsAlert,
       successAlert,
       res,
       showOrNot,
-      resval
+      resval,
+      keyVal
     }
   }
 });

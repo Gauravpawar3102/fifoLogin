@@ -57,6 +57,8 @@ export default  defineComponent({
 
     
 
+    
+
     const startScan = async (inOut) => {
       inOrOut.value = inOut
       await store.dispatch("apis/setInOrOut",inOut);
