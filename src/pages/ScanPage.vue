@@ -3,7 +3,7 @@
     <div class="container">
       <div class="barcode-scanner--area--container">
         <div class="relative">
-          <p>Aim your camera at a barcode {{resval}}</p>
+          <p>Aim your camera at a QR Code {{resval}}</p>
         </div>
         <div class="square surround-cover">
           <div class="barcode-scanner--area--outer surround-cover">
@@ -127,8 +127,18 @@ export default  defineComponent({
                 const loading = await presentLoading();
                 resval.value = response.status
                 console.log(resval.value)
-                loading.dismiss()
-                await successAlert()
+                console.log("out response: ",response.data[0])
+                if(response.data == 'EXISTS'){
+                  loading.dismiss()
+                  await existsAlert()
+                } else if(response.data[0] == 'PACKET FOLLOWS FIFO'){
+                  loading.dismiss()
+                  await successAlert()
+                } else if(response.data[0] == 'PACKET DOES NOT FOLLOW FIFO'){
+                  loading.dismiss()
+                  await noFifoAlert(response.data[1])
+                }
+                
             }
         }
       }
@@ -167,6 +177,21 @@ export default  defineComponent({
       console.log('onDidDismiss resolved with role', role);
     }
 
+    const noFifoAlert = async (dataObj) => {
+      const alert = await alertController
+        .create({
+          cssClass: 'noFifo-alert',
+          header: 'Alert',
+          subHeader: 'FIFO NOT FOLLOWED',
+          message: 'Please get this packet with date of expiry '+ dataObj.expDate +' instead',
+          buttons: ['OK'],
+        });
+      await alert.present();
+
+      const { role } = await alert.onDidDismiss();
+      console.log('onDidDismiss resolved with role', role);
+    }
+
     
 
     const presentLoading = async () => {
@@ -186,6 +211,19 @@ export default  defineComponent({
       if (status.granted) {
         // the user granted permission
         return true;
+      }
+
+      const status2 = await BarcodeScanner.checkPermission();
+
+      if (status2.denied) {
+        // the user denied permission for good
+        // redirect user to app settings if they want to grant it anyway
+        const c = confirm(
+          'If you want to grant permission for using your camera, enable it in the app settings.',
+        );
+        if (c) {
+          BarcodeScanner.openAppSettings();
+        }
       }
 
       return false;
@@ -319,6 +357,9 @@ export default  defineComponent({
       }
       .success-alert{
         --background: rgb(3, 249, 3);
+      }
+      .noFifo-alert{
+        --background: rgb(124, 4, 4);
       }
 </style>
 

@@ -49,6 +49,8 @@ export default {
 
         const userData = ref("")
 
+        userData.value = authData;
+
         const logoutUser = async () => {
             await store.dispatch("auth/logoutUser")
             router.push({path:'/login'})

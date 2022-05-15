@@ -15,7 +15,7 @@
         <div class="cntr">
           <ion-button @click="startScan('in')">InputScan</ion-button>
           <ion-button @click="startScan('out')">OutputScan</ion-button>
-          <ion-button @click="checkPermission">GrantPerm</ion-button>
+          <!-- <ion-button @click="checkPermission">GrantPerm</ion-button> -->
         </div>
       </div>
     </ion-content>
@@ -50,6 +50,7 @@ export default  defineComponent({
     const store = useStore();
 
     onMounted(async () => {
+        await checkPermission()
         await store.dispatch("auth/getUserData")
     });
 
@@ -73,6 +74,19 @@ export default  defineComponent({
       if (status.granted) {
         // the user granted permission
         return true;
+      }
+
+      const status2 = await BarcodeScanner.checkPermission();
+
+      if (status2.denied) {
+        // the user denied permission for good
+        // redirect user to app settings if they want to grant it anyway
+        const c = confirm(
+          'If you want to grant permission for using your camera, enable it in the app settings.',
+        );
+        if (c) {
+          BarcodeScanner.openAppSettings();
+        }
       }
 
       return false;
