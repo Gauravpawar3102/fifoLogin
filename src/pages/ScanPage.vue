@@ -17,13 +17,14 @@
 
 <script>
 import { computed, defineComponent, onMounted, onUnmounted, onUpdated } from 'vue';
-import { IonPage,alertController,loadingController} from '@ionic/vue';
+import { IonPage,alertController,loadingController, toastController} from '@ionic/vue';
 import {ref} from 'vue';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import {useRouter,onBeforeRouteLeave,} from 'vue-router'
 import { useStore } from 'vuex';
 import {qrParser,} from '@/shared/helper.js'
 import axios from 'axios';
+import { Haptics } from '@capacitor/haptics';
 
 
 
@@ -107,10 +108,12 @@ export default  defineComponent({
                 console.log("response text: ",response.data)
                 if(response.data == 'Already EXISTS'){
                   loading.dismiss()
-                  await existsAlert()
+                  // await existsAlert()
+                  await warningToast('The packet was already scanned')
                 }else if(response.status == 200 || response.status == 201){
                   loading.dismiss()
-                  await successAlert()
+                  // await successAlert()
+                  await successToast('Successfully Scanned')
                 }
             }else if (inOrOut.value == 'out'){
                 //call out axios call function
@@ -130,10 +133,12 @@ export default  defineComponent({
                 console.log("out response: ",response.data[0])
                 if(response.data == 'EXISTS'){
                   loading.dismiss()
-                  await existsAlert()
+                  // await existsAlert()
+                  await warningToast('The packet was already scanned')
                 } else if(response.data[0] == 'PACKET FOLLOWS FIFO'){
                   loading.dismiss()
-                  await successAlert()
+                  // await successAlert()
+                  await successToast('Successfully Scanned')
                 } else if(response.data[0] == 'PACKET DOES NOT FOLLOW FIFO'){
                   loading.dismiss()
                   await noFifoAlert(response.data[1])
@@ -190,6 +195,27 @@ export default  defineComponent({
 
       const { role } = await alert.onDidDismiss();
       console.log('onDidDismiss resolved with role', role);
+    }
+
+
+    const warningToast = async (msgg) => {
+      const toast = await toastController
+        .create({
+          message: msgg,
+          duration: 900,
+          cssClass: 'warningt'
+        })
+      return toast.present();
+    }
+
+    const successToast = async (msgg) => {
+      const toast = await toastController
+        .create({
+          message: msgg,
+          duration: 900,
+          cssClass: 'successt'
+        })
+      return toast.present();
     }
 
     
@@ -256,7 +282,9 @@ export default  defineComponent({
       res,
       showOrNot,
       resval,
-      keyVal
+      keyVal,
+      warningToast,
+      successToast
     }
   }
 });
@@ -360,6 +388,12 @@ export default  defineComponent({
       }
       .noFifo-alert{
         --background: rgb(124, 4, 4);
+      }
+      .successt{
+        --background: rgb(3, 249, 3);
+      }
+      .warningt{
+        --background: rgb(255, 255, 0);
       }
 </style>
 
