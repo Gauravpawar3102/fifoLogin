@@ -110,9 +110,11 @@ export default  defineComponent({
                   loading.dismiss()
                   // await existsAlert()
                   await warningToast('The packet was already scanned')
+                  await hapticsVibrate(300)
                 }else if(response.status == 200 || response.status == 201){
                   loading.dismiss()
                   // await successAlert()
+                  await hapticsVibrate(100)
                   await successToast('Successfully Scanned')
                 }
             }else if (inOrOut.value == 'out'){
@@ -135,12 +137,21 @@ export default  defineComponent({
                   loading.dismiss()
                   // await existsAlert()
                   await warningToast('The packet was already scanned')
-                } else if(response.data[0] == 'PACKET FOLLOWS FIFO'){
+                  await hapticsVibrate(300)
+                } else if(response.data == 'INPUT SCAN NOT FOUND'){
+                  loading.dismiss()
+                  // await successAlert()
+                  await warningToast('The packet was never input scanned',2000)
+                  await hapticsVibrate(100)
+                } 
+                else if(response.data[0] == 'PACKET FOLLOWS FIFO'){
                   loading.dismiss()
                   // await successAlert()
                   await successToast('Successfully Scanned')
+                  await hapticsVibrate(100)
                 } else if(response.data[0] == 'PACKET DOES NOT FOLLOW FIFO'){
                   loading.dismiss()
+                  await hapticsVibrate(300)
                   await noFifoAlert(response.data[1])
                 }
                 
@@ -198,11 +209,11 @@ export default  defineComponent({
     }
 
 
-    const warningToast = async (msgg) => {
+    const warningToast = async (msgg,durr=900) => {
       const toast = await toastController
         .create({
           message: msgg,
-          duration: 900,
+          duration: durr,
           cssClass: 'warningt'
         })
       return toast.present();
@@ -230,6 +241,10 @@ export default  defineComponent({
       await loading.present();
       return loading
     }
+
+    const hapticsVibrate = async (duration) => {
+      await Haptics.vibrate(duration);
+    };
 
     const checkPermission = async () => {
       const status = await BarcodeScanner.checkPermission({ force: true });
@@ -284,7 +299,8 @@ export default  defineComponent({
       resval,
       keyVal,
       warningToast,
-      successToast
+      successToast,
+      hapticsVibrate
     }
   }
 });
@@ -390,10 +406,10 @@ export default  defineComponent({
         --background: rgb(124, 4, 4);
       }
       .successt{
-        --background: rgb(3, 249, 3);
+        --background: rgb(4, 111, 4);
       }
       .warningt{
-        --background: rgb(255, 255, 0);
+        --background: rgb(188, 188, 7);
       }
 </style>
 
