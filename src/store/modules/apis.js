@@ -5,6 +5,7 @@
 const state = {
     qrCode: "",
     inOrOut: "",
+    outScanType: ""
 
   }
 const getters = {
@@ -14,6 +15,9 @@ const getters = {
      getInOrOut: (state) => {
         return state.inOrOut;
      },
+     getOutScanType: (state) => {
+         return state.outScanType;
+     }
     }
 
 const mutations= {
@@ -23,6 +27,9 @@ const mutations= {
     },
     setInOrOut : (state,payload) => {
         state.inOrOut = payload
+    },
+    setOutScanType : (state,payload) => {
+        state.outScanType = payload
     }
   }
 
@@ -33,6 +40,9 @@ const actions = {
     },
     setInOrOut : async ({commit},payload) => {
         commit('setInOrOut',payload)
+    },
+    setOutScanType : async({commit},payload) => {
+        commit('setOutScanType',payload)
     },
   }
 

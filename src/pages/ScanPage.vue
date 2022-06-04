@@ -58,6 +58,9 @@ export default  defineComponent({
 
     const inOrOut = computed(()=> store.getters['apis/getInOrOut'])
 
+    const outscanType = computed(()=> store.getters['apis/getOutScanType'])
+
+
 
 //     {
 //     "timestamp": "2022-02-27T10:15:17.843056Z",
@@ -106,7 +109,7 @@ export default  defineComponent({
                 const loading = await presentLoading();
                 resval.value = response.status
                 console.log("response text: ",response.data)
-                if(response.data == 'Already EXISTS'){
+                if(response.data == 'Already EXISTS' || response.data == 'EXISTS'){
                   loading.dismiss()
                   // await existsAlert()
                   await warningToast('The packet was already scanned')
@@ -128,11 +131,12 @@ export default  defineComponent({
                 });
 
                 console.log("waddup: ",JSON.stringify(retVal))
+                retVal.outscanType = outscanType.value;
                 const response = await axios.post("https://fifo-update.cokit.tech/fifo/outputScan", retVal);
                 const loading = await presentLoading();
                 resval.value = response.status
                 console.log(resval.value)
-                console.log("out response: ",response.data[0])
+                console.log("out response: ",response.data)
                 if(response.data == 'EXISTS'){
                   loading.dismiss()
                   // await existsAlert()
@@ -153,6 +157,14 @@ export default  defineComponent({
                   loading.dismiss()
                   await hapticsVibrate(300)
                   await noFifoAlert(response.data[1])
+                } else if(response.status == 201 && outscanType.value == 'used' && response.data[0] == "PACKET SENT TO USED PILE"){
+                  loading.dismiss()
+                  await hapticsVibrate(300)
+                  await warningToast('Usage recorded',2000)
+                } else if(response.status == 201 && outscanType.value == 'wasted' && response.data[0] == "PACKET SENT TO WASTED PILE"){
+                  loading.dismiss()
+                  await hapticsVibrate(300)
+                  await warningToast('Wastage recorded',2000)
                 }
                 
             }

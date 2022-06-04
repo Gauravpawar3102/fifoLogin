@@ -96,8 +96,11 @@ export function qrParser(qrCode,inOrOut,userID,kitchenID){
   
   temp = myArray[3]
     shelfLife = Number(temp)
+
+  temp = myArray[4].split(' ')
+  retVal.unitChange = Number(temp[0])
   
-  retVal.unitChange = null
+  // retVal.unitChange = null
   dom = myArray[5]+'T'+myArray[6]
   var date = new Date(dom)
   retVal.expDate = date.addDays(shelfLife).toISOString().split('T')[0]

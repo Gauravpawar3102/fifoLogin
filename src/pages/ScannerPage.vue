@@ -13,8 +13,15 @@
       </ion-header>
       <div class="cntrcntr">
         <div class="cntr">
-          <ion-button @click="startScan('in')">InputScan</ion-button>
-          <ion-button @click="startScan('out')">OutputScan</ion-button>
+          <ion-button @click="startScan('in','none')">InputScan</ion-button>
+          <ion-button @click="startScan('out','output')">OutputScan</ion-button>
+          <div><p></p></div>
+          <div><p></p></div>
+          <ion-button @click="startScan('out','used')">Used Scan</ion-button>
+          <div><p></p></div>
+          <div><p></p></div>
+          <ion-button @click="startScan('out','wasted')">Wastage Scan</ion-button>
+
           <!-- <ion-button @click="checkPermission">GrantPerm</ion-button> -->
         </div>
       </div>
@@ -60,9 +67,10 @@ export default  defineComponent({
 
     
 
-    const startScan = async (inOut) => {
+    const startScan = async (inOut,outScanType) => {
       inOrOut.value = inOut
       await store.dispatch("apis/setInOrOut",inOut);
+      await store.dispatch("apis/setOutScanType",outScanType);
       await store.dispatch("apis/setQrCode","");
       console.log("ssup")
       router.push({path:'/scan'})
