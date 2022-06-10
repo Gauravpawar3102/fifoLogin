@@ -26,7 +26,7 @@ import {qrParser,} from '@/shared/helper.js';
 import axios from 'axios';
 import { Haptics } from '@capacitor/haptics';
 // import { createAnimation } from '@ionic/vue';
-// import {NativeAudio} from '@capacitor-community/native-audio'
+import {NativeAudio} from '@capacitor-community/native-audio'
 
 
 
@@ -64,7 +64,13 @@ export default  defineComponent({
 
     const surroundCover = ref(null)
 
-
+    NativeAudio.preload({
+    assetId: "fire",
+    assetPath: "public/assets/fire.mp3",
+    audioChannelNum: 1,
+    isUrl: false,
+    volume: 1.0,
+      });
 
 
 
@@ -230,6 +236,12 @@ export default  defineComponent({
 
     const warningToast = async (msgg,durr=900) => {
       surroundCover.value.style.boxShadow = "0 0 0 99999px rgba(255, 255, 0, 0.7)";
+
+      NativeAudio.play({
+          assetId: 'fire',
+          // time: 6.0 - seek time
+      });
+      
       const toast = await toastController
         .create({
           message: msgg,
