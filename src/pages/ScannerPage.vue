@@ -14,6 +14,8 @@
       <div class="cntrcntr">
         <div class="cntr">
           <ion-button @click="startScan('in','none')">InputScan</ion-button>
+          <div><p></p></div>
+          <div><p></p></div>
           <ion-button @click="startScan('out','output')">OutputScan</ion-button>
           <div><p></p></div>
           <div><p></p></div>

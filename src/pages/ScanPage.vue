@@ -5,7 +5,7 @@
         <div class="relative">
           <p>Aim your camera at a QR Code {{resval}}</p>
         </div>
-        <div class="square surround-cover">
+        <div class="square surround-cover" ref="surroundCover">
           <div class="barcode-scanner--area--outer surround-cover">
             <div class="barcode-scanner--area--inner"></div>
           </div>
@@ -20,11 +20,13 @@ import { computed, defineComponent, onMounted, onUnmounted, onUpdated } from 'vu
 import { IonPage,alertController,loadingController, toastController} from '@ionic/vue';
 import {ref} from 'vue';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
-import {useRouter,onBeforeRouteLeave,} from 'vue-router'
+import {useRouter,onBeforeRouteLeave,} from 'vue-router';
 import { useStore } from 'vuex';
-import {qrParser,} from '@/shared/helper.js'
+import {qrParser,} from '@/shared/helper.js';
 import axios from 'axios';
 import { Haptics } from '@capacitor/haptics';
+// import { createAnimation } from '@ionic/vue';
+// import {NativeAudio} from '@capacitor-community/native-audio'
 
 
 
@@ -59,6 +61,10 @@ export default  defineComponent({
     const inOrOut = computed(()=> store.getters['apis/getInOrOut'])
 
     const outscanType = computed(()=> store.getters['apis/getOutScanType'])
+
+    const surroundCover = ref(null)
+
+
 
 
 
@@ -206,6 +212,7 @@ export default  defineComponent({
     }
 
     const noFifoAlert = async (dataObj) => {
+      surroundCover.value.style.boxShadow = "0 0 0 99999px rgba(153, 0, 0, 0.7)";
       const alert = await alertController
         .create({
           cssClass: 'noFifo-alert',
@@ -222,6 +229,7 @@ export default  defineComponent({
 
 
     const warningToast = async (msgg,durr=900) => {
+      surroundCover.value.style.boxShadow = "0 0 0 99999px rgba(255, 255, 0, 0.7)";
       const toast = await toastController
         .create({
           message: msgg,
@@ -232,6 +240,7 @@ export default  defineComponent({
     }
 
     const successToast = async (msgg) => {
+      surroundCover.value.style.boxShadow = "0 0 0 99999px rgba(0, 153, 51, 0.7)";
       const toast = await toastController
         .create({
           message: msgg,
@@ -312,7 +321,8 @@ export default  defineComponent({
       keyVal,
       warningToast,
       successToast,
-      hapticsVibrate
+      hapticsVibrate,
+      surroundCover
     }
   }
 });

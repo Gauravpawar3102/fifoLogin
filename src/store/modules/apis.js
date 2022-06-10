@@ -5,7 +5,8 @@
 const state = {
     qrCode: "",
     inOrOut: "",
-    outScanType: ""
+    outScanType: "",
+    appVersion: "0.0.1"
 
   }
 const getters = {
@@ -17,7 +18,10 @@ const getters = {
      },
      getOutScanType: (state) => {
          return state.outScanType;
-     }
+     },
+     getAppVersion: (state) => {
+        return state.appVersion;
+    }
     }
 
 const mutations= {
