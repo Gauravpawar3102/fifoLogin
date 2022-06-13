@@ -1,9 +1,16 @@
 <template>
   <ion-page :key="{keyVal}">
     <div class="container">
+      <div class="currentOptionCss">
+        <p>{{currentOption}}</p>
+      </div>
+      <div class="buttonDown">
+        <ion-button @click="stopScanBtn">GO BACK</ion-button>
+      </div>
       <div class="barcode-scanner--area--container">
         <div class="relative">
-          <p>Aim your camera at a QR Code {{resval}}</p>
+          <!-- <p>Aim your camera at a QR Code {{resval}}</p> -->
+          <p>Aim your camera at a QR Code</p>
         </div>
         <div class="square surround-cover" ref="surroundCover">
           <div class="barcode-scanner--area--outer surround-cover">
@@ -17,7 +24,7 @@
 
 <script>
 import { computed, defineComponent, onMounted, onUnmounted, onUpdated } from 'vue';
-import { IonPage,alertController,loadingController, toastController} from '@ionic/vue';
+import { IonPage,alertController,loadingController, toastController, IonButton} from '@ionic/vue';
 import {ref} from 'vue';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import {useRouter,onBeforeRouteLeave,} from 'vue-router';
@@ -62,11 +69,23 @@ export default  defineComponent({
 
     const outscanType = computed(()=> store.getters['apis/getOutScanType'])
 
+    const fifoOverride = computed(()=> store.getters['apis/getFifoOverride'])
+
     const surroundCover = ref(null)
 
+    const currentOption = ref("")
+
     NativeAudio.preload({
-    assetId: "fire",
-    assetPath: "public/assets/fire.mp3",
+    assetId: "success",
+    assetPath: "public/assets/success.mp3",
+    audioChannelNum: 1,
+    isUrl: false,
+    volume: 1.0,
+      });
+
+    NativeAudio.preload({
+    assetId: "error",
+    assetPath: "public/assets/error.mp3",
     audioChannelNum: 1,
     isUrl: false,
     volume: 1.0,
@@ -94,6 +113,16 @@ export default  defineComponent({
       showOrNot.value = true;
       res.value = ""
       BarcodeScanner.hideBackground(); // make background of WebView transparent
+      if(inOrOut.value == 'in'){
+                currentOption.value = "INPUT SCAN"
+                }
+      else if(inOrOut.value == 'out' && fifoOverride.value==false){
+                currentOption.value = "OUTPUT SCAN"
+                }
+      else if(inOrOut.value == 'out' && fifoOverride.value==true){
+                currentOption.value = "FIFO OVER-RIDE SCAN"
+      }
+
       document.body.style.background = "transparent";
 
       const result = await BarcodeScanner.startScan(); // start scanning and wait for a result
@@ -133,6 +162,7 @@ export default  defineComponent({
                   await successToast('Successfully Scanned')
                 }
             }else if (inOrOut.value == 'out'){
+                console.log("the message here is :", currentOption.value)
                 //call out axios call function
                 const access_token = computed(() => store.getters['auth/getAuthData'].token).value
                 // console.log(access_token)
@@ -144,6 +174,7 @@ export default  defineComponent({
 
                 console.log("waddup: ",JSON.stringify(retVal))
                 retVal.outscanType = outscanType.value;
+                retVal.fifoOverride = fifoOverride.value;
                 const response = await axios.post("https://fifo-update.cokit.tech/fifo/outputScan", retVal);
                 const loading = await presentLoading();
                 resval.value = response.status
@@ -177,6 +208,10 @@ export default  defineComponent({
                   loading.dismiss()
                   await hapticsVibrate(300)
                   await warningToast('Wastage recorded',2000)
+                }  else if(response.status == 201 && outscanType.value == 'output' && fifoOverride.value == true){
+                  loading.dismiss()
+                  await hapticsVibrate(300)
+                  await successToast('FIFO OVERRIDE DONE',2000)
                 }
                 
             }
@@ -219,12 +254,16 @@ export default  defineComponent({
 
     const noFifoAlert = async (dataObj) => {
       surroundCover.value.style.boxShadow = "0 0 0 99999px rgba(153, 0, 0, 0.7)";
+      NativeAudio.play({
+          assetId: 'error',
+          // time: 6.0 - seek time
+      });
       const alert = await alertController
         .create({
           cssClass: 'noFifo-alert',
           header: 'Alert',
           subHeader: 'FIFO NOT FOLLOWED',
-          message: 'Please get this packet with date of expiry '+ dataObj.expDate +' instead',
+          message: 'Please get this packet with date of manufacture '+ dataObj.expDate +' instead',
           buttons: ['OK'],
         });
       await alert.present();
@@ -234,11 +273,11 @@ export default  defineComponent({
     }
 
 
-    const warningToast = async (msgg,durr=900) => {
+    const warningToast = async (msgg,durr=2000) => {
       surroundCover.value.style.boxShadow = "0 0 0 99999px rgba(255, 255, 0, 0.7)";
 
       NativeAudio.play({
-          assetId: 'fire',
+          assetId: 'error',
           // time: 6.0 - seek time
       });
       
@@ -251,12 +290,18 @@ export default  defineComponent({
       return toast.present();
     }
 
-    const successToast = async (msgg) => {
+    const successToast = async (msgg,durr=2000) => {
       surroundCover.value.style.boxShadow = "0 0 0 99999px rgba(0, 153, 51, 0.7)";
+
+      NativeAudio.play({
+          assetId: 'success',
+          // time: 6.0 - seek time
+      });
+
       const toast = await toastController
         .create({
           message: msgg,
-          duration: 900,
+          duration: durr,
           cssClass: 'successt'
         })
       return toast.present();
@@ -334,7 +379,9 @@ export default  defineComponent({
       warningToast,
       successToast,
       hapticsVibrate,
-      surroundCover
+      surroundCover,
+      IonButton,
+      currentOption
     }
   }
 });
@@ -424,6 +471,35 @@ export default  defineComponent({
         100% {
           transform: translate(0, 0) rotate(0deg) scale(1);
         }
+      }
+
+      .buttonDown{
+        width:100%;
+        position:absolute;
+        z-index: 10;
+        top: 90%;
+        margin-right: auto;
+        left: 0;
+        right: 0;
+        text-align: center;
+      }
+
+      .currentOptionCss{
+        width:100%;
+        position:absolute;
+        z-index: 8;
+        top: 20%;
+        margin-right: auto;
+        left: 0;
+        right: 0;
+        text-align: center;
+      }
+
+      .currentOptionCss p{
+        color: #fff;
+        font-family: sans-serif;
+        text-align: center;
+        font-weight: 600;
       }
 
 

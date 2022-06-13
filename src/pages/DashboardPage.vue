@@ -7,7 +7,7 @@
         </ion-card>
         <ion-card-content>
             <ion-item>
-                <ion-label>Owner Name:</ion-label>
+                <ion-label>User Name:</ion-label>
                 <ion-label>{{ userData.first_name + " " + userData.last_name }}</ion-label>
             </ion-item>
             <ion-item v-if="userData.partnerBrand">

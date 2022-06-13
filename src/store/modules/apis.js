@@ -6,6 +6,7 @@ const state = {
     qrCode: "",
     inOrOut: "",
     outScanType: "",
+    fifoOverride: false,
     appVersion: "0.0.1"
 
   }
@@ -21,6 +22,9 @@ const getters = {
      },
      getAppVersion: (state) => {
         return state.appVersion;
+    },
+    getFifoOverride: (state) => {
+        return state.fifoOverride;
     }
     }
 
@@ -34,6 +38,9 @@ const mutations= {
     },
     setOutScanType : (state,payload) => {
         state.outScanType = payload
+    },
+    setFifoOverride : (state,payload) => {
+        state.fifoOverride = payload
     }
   }
 
@@ -47,6 +54,9 @@ const actions = {
     },
     setOutScanType : async({commit},payload) => {
         commit('setOutScanType',payload)
+    },
+    setFifoOverride : async({commit},payload) => {
+        commit('setFifoOverride',payload)
     },
   }
 

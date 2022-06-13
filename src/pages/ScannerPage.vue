@@ -19,10 +19,11 @@
           <ion-button @click="startScan('out','output')">OutputScan</ion-button>
           <div><p></p></div>
           <div><p></p></div>
-          <ion-button @click="startScan('out','used')">Used Scan</ion-button>
+          <ion-button @click="startScan('out','output',true)">OverRide FIFO</ion-button>
+          <!-- <ion-button @click="startScan('out','used')">Used Scan</ion-button>
           <div><p></p></div>
           <div><p></p></div>
-          <ion-button @click="startScan('out','wasted')">Wastage Scan</ion-button>
+          <ion-button @click="startScan('out','wasted')">Wastage Scan</ion-button> -->
 
           <!-- <ion-button @click="checkPermission">GrantPerm</ion-button> -->
         </div>
@@ -69,10 +70,11 @@ export default  defineComponent({
 
     
 
-    const startScan = async (inOut,outScanType) => {
+    const startScan = async (inOut,outScanType,fifoOverride=false) => {
       inOrOut.value = inOut
       await store.dispatch("apis/setInOrOut",inOut);
       await store.dispatch("apis/setOutScanType",outScanType);
+      await store.dispatch("apis/setFifoOverride",fifoOverride);
       await store.dispatch("apis/setQrCode","");
       console.log("ssup")
       router.push({path:'/scan'})
