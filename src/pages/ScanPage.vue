@@ -29,7 +29,7 @@ import {ref} from 'vue';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import {useRouter,onBeforeRouteLeave,} from 'vue-router';
 import { useStore } from 'vuex';
-import {qrParser,} from '@/shared/helper.js';
+import {qrParser,qrParserDateOfMfg} from '@/shared/helper.js';
 import axios from 'axios';
 import { Haptics } from '@capacitor/haptics';
 // import { createAnimation } from '@ionic/vue';
@@ -135,7 +135,11 @@ export default  defineComponent({
             const userData = computed(() => store.getters['auth/getUserData'])
             const retVal = qrParser(res.value,inOrOut.value,userData.value.id,userData.value.partnerWorkingForKitchen.id)
             resval.value = retVal
-            if(inOrOut.value == 'in'){
+            if(!retVal){
+              await warningToast('OLD/INVALID QR CODE')
+              await hapticsVibrate(300)
+            }
+            else if(inOrOut.value == 'in'){
                 //call in axios call function
                 const access_token = computed(() => store.getters['auth/getAuthData'].token).value
                 // console.log(access_token)
@@ -263,7 +267,7 @@ export default  defineComponent({
           cssClass: 'noFifo-alert',
           header: 'Alert',
           subHeader: 'FIFO NOT FOLLOWED',
-          message: 'Please get this packet with date of manufacture '+ dataObj.expDate +' instead',
+          message: 'Please get this packet with date of manufacture '+ qrParserDateOfMfg(dataObj.qrcode) +' instead',
           buttons: ['OK'],
         });
       await alert.present();

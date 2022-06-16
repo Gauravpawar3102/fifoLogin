@@ -74,6 +74,9 @@ export function qrParser(qrCode,inOrOut,userID,kitchenID){
     return date;
   }
   const retVal = {}
+  if(!qrCode.includes('#')){
+    return false;
+  }
   const myArray = qrCode.split("#");
   let temp = myArray[0].split('=')
   let shelfLife = 0
@@ -112,4 +115,25 @@ export function qrParser(qrCode,inOrOut,userID,kitchenID){
   
   return retVal
 
+}
+
+export function qrParserDateOfMfg(qrCode){
+  const month = {
+      "01": "JAN",
+      "02": "FEB",
+      "03": "MAR",
+      "04": "APR",
+      "05": "MAY",
+      "06": "JUN",
+      "07": "JUL",
+      "08": "AUG",
+      "09": "SEP",
+      '10': "OCT",
+      '11': "NOV",
+      '12': "DEC",
+  }
+  const myArray = qrCode.split("#");
+  const domArray = myArray[5].split("-");
+  const dom = domArray[2]+" "+month[domArray[1]]
+  return dom;
 }
