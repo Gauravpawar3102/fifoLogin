@@ -138,6 +138,7 @@ export default  defineComponent({
             if(!retVal){
               await warningToast('OLD/INVALID QR CODE')
               await hapticsVibrate(300)
+              await stopScan();
             }
             else if(inOrOut.value == 'in'){
                 //call in axios call function
@@ -267,7 +268,7 @@ export default  defineComponent({
           cssClass: 'noFifo-alert',
           header: 'Alert',
           subHeader: 'FIFO NOT FOLLOWED',
-          message: 'Please get this packet with date of manufacture '+ qrParserDateOfMfg(dataObj.qrcode) +' instead',
+          message: 'Please get this packet with date of manufacture instead : ' + qrParserDateOfMfg(dataObj.qrcode),
           buttons: ['OK'],
         });
       await alert.present();
@@ -518,6 +519,7 @@ export default  defineComponent({
       }
       .noFifo-alert{
         --background: rgb(124, 4, 4);
+        --ion-text-color: rgb(225,225,225);
       }
       .successt{
         --background: rgb(4, 111, 4);
@@ -525,6 +527,11 @@ export default  defineComponent({
       .warningt{
         --background: rgb(188, 188, 7);
       }
+
+      .alert-message.sc-ion-alert-md{
+        color: white;
+      }
+
 </style>
 
 

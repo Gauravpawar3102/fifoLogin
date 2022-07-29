@@ -24,6 +24,9 @@
           <div><p></p></div>
           <div><p></p></div>
           <ion-button @click="startScan('out','wasted')">Wastage Scan</ion-button> -->
+          <div><p></p></div>
+          <div><p></p></div>
+          <ion-button @click="startScan('out','wasted')">Wastage Scan</ion-button>
 
           <!-- <ion-button @click="checkPermission">GrantPerm</ion-button> -->
         </div>
