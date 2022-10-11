@@ -26,12 +26,12 @@
           userData.partnerWorkingForKitchen.name
         }}</ion-label>
       </ion-item>
-      <ion-button @click="setOpen(true)">Logout</ion-button>
+      <ion-button @click="logoutUser()">Logout</ion-button>
     </ion-card-content>
 
     <!-- this is the modal for the re logging in -->
 
-      <ion-modal :is-open="isOpen">
+      <!-- <ion-modal :is-open="isOpen">
         <ion-header>
           <ion-toolbar>
             <ion-title>Confirmation of Logout</ion-title>
@@ -45,7 +45,7 @@
             You have been logged out successfully. Please re-login to continue..
           </p>
         </ion-content>
-      </ion-modal>
+      </ion-modal> -->
   </master-layout>
 </template>
 
@@ -75,8 +75,6 @@ export default {
     IonButton,
   },
   setup() {
-    const modal = ref(false);
-
     const store = useStore();
 
     const router = useRouter();
@@ -87,12 +85,9 @@ export default {
 
     userData.value = authData;
 
-    const setOpen = (value) => {
-      modal.value = value;
-    };
-
     const logoutUser = async () => {
-        setOpen(false);
+      // setting and alert to relogin after exiting app
+      alert("You have been logged out successfully. Please exit & re-login to continue..");
       await store.dispatch("auth/logoutUser");
       router.push({ path: "/login" });
     };
