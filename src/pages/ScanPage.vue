@@ -1,8 +1,8 @@
 <template>
-  <ion-page :key="{keyVal}">
+  <ion-page :key="{ keyVal }">
     <div class="container">
       <div class="currentOptionCss">
-        <p>{{currentOption}}</p>
+        <p>{{ currentOption }}</p>
       </div>
       <div class="buttonDown">
         <ion-button @click="stopScanBtn">GO BACK</ion-button>
@@ -23,307 +23,370 @@
 </template>
 
 <script>
-import { computed, defineComponent, onMounted, onUnmounted, onUpdated } from 'vue';
-import { IonPage,alertController,loadingController, toastController, IonButton} from '@ionic/vue';
-import {ref} from 'vue';
+import {
+  computed,
+  defineComponent,
+  onMounted,
+  onUnmounted,
+  onUpdated,
+} from 'vue';
+import {
+  IonPage,
+  alertController,
+  loadingController,
+  toastController,
+  IonButton,
+} from '@ionic/vue';
+import { ref } from 'vue';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
-import {useRouter,onBeforeRouteLeave,} from 'vue-router';
+import { useRouter, onBeforeRouteLeave } from 'vue-router';
 import { useStore } from 'vuex';
-import {qrParser,qrParserDateOfMfg} from '@/shared/helper.js';
+import { qrParser, qrParserDateOfMfg } from '@/shared/helper.js';
 import axios from 'axios';
 import { Haptics } from '@capacitor/haptics';
 // import { createAnimation } from '@ionic/vue';
-import {NativeAudio} from '@capacitor-community/native-audio'
+import { NativeAudio } from '@capacitor-community/native-audio';
 
-
-
-export default  defineComponent({
+export default defineComponent({
   name: 'ScanPage',
-  components: { IonPage},
-  setup(){
+  components: { IonPage },
+  setup() {
     const router = useRouter();
 
-    const res = ref("blank");
+    const res = ref('blank');
 
-    const resval = ref("blank");
+    const resval = ref('blank');
 
     const keyVal = ref(1);
 
-
     const showOrNot = ref(false);
 
-    
+    const store = useStore();
 
-    const store = useStore()
+    onMounted(async () => {
+      await startScan();
+    });
 
-    onMounted(async () => {await startScan()})
+    onUpdated(async () => {
+      await startScan();
+    });
 
-    onUpdated(async () => {await startScan()})
+    onUnmounted(async () => {
+      await BarcodeScanner.stopScan();
+    });
 
-    onUnmounted(async () => {await BarcodeScanner.stopScan()})
+    onBeforeRouteLeave(async () => {
+      await stopScanBack();
+    });
 
+    const inOrOut = computed(() => store.getters['apis/getInOrOut']);
 
-    onBeforeRouteLeave(async () => { await stopScanBack()})
+    const outscanType = computed(() => store.getters['apis/getOutScanType']);
 
-    const inOrOut = computed(()=> store.getters['apis/getInOrOut'])
+    const fifoOverride = computed(() => store.getters['apis/getFifoOverride']);
 
-    const outscanType = computed(()=> store.getters['apis/getOutScanType'])
+    const surroundCover = ref(null);
 
-    const fifoOverride = computed(()=> store.getters['apis/getFifoOverride'])
-
-    const surroundCover = ref(null)
-
-    const currentOption = ref("")
-
-    NativeAudio.preload({
-    assetId: "success",
-    assetPath: "public/assets/success.mp3",
-    audioChannelNum: 1,
-    isUrl: false,
-    volume: 1.0,
-      });
+    const currentOption = ref('');
 
     NativeAudio.preload({
-    assetId: "error",
-    assetPath: "public/assets/error.mp3",
-    audioChannelNum: 1,
-    isUrl: false,
-    volume: 1.0,
-      });
+      assetId: 'success',
+      assetPath: 'public/assets/success.mp3',
+      audioChannelNum: 1,
+      isUrl: false,
+      volume: 1.0,
+    });
 
+    NativeAudio.preload({
+      assetId: 'error',
+      assetPath: 'public/assets/error.mp3',
+      audioChannelNum: 1,
+      isUrl: false,
+      volume: 1.0,
+    });
 
-
-//     {
-//     "timestamp": "2022-02-27T10:15:17.843056Z",
-//     "expDate": null,
-//     "qrcode": "abcd4567",
-//     "batchDetails": "fasdfasdf",
-//     "unitChange": null,
-//     "brandID": 1,
-//     "destKitchen": 1,
-//     "recipeID": 3,
-//     "itemID": null,
-//     "partnerID" : 1
-// }
-
-    
+    //     {
+    //     "timestamp": "2022-02-27T10:15:17.843056Z",
+    //     "expDate": null,
+    //     "qrcode": "abcd4567",
+    //     "batchDetails": "fasdfasdf",
+    //     "unitChange": null,
+    //     "brandID": 1,
+    //     "destKitchen": 1,
+    //     "recipeID": 3,
+    //     "itemID": null,
+    //     "partnerID" : 1
+    // }
 
     const startScan = async () => {
-      await store.dispatch("auth/getUserData")
+      await store.dispatch('auth/getUserData');
       showOrNot.value = true;
-      res.value = ""
+      res.value = '';
       BarcodeScanner.hideBackground(); // make background of WebView transparent
-      if(inOrOut.value == 'in'){
-                currentOption.value = "INPUT SCAN"
-                }
-      else if(inOrOut.value == 'out' && fifoOverride.value==false){
-                currentOption.value = "OUTPUT SCAN"
-                }
-      else if(inOrOut.value == 'out' && fifoOverride.value==true){
-                currentOption.value = "FIFO OVER-RIDE SCAN"
+      if (inOrOut.value == 'in') {
+        currentOption.value = 'INPUT SCAN';
+      } else if (inOrOut.value == 'out' && fifoOverride.value == false) {
+        currentOption.value = 'OUTPUT SCAN';
+      } else if (inOrOut.value == 'out' && fifoOverride.value == true) {
+        currentOption.value = 'FIFO OVER-RIDE SCAN';
       }
 
-      document.body.style.background = "transparent";
+      document.body.style.background = 'transparent';
 
       const result = await BarcodeScanner.startScan(); // start scanning and wait for a result
+
+      ////⛳Todays date
+      var today = new Date().toISOString().split('T')[0];
 
       // if the result has content
       if (result.hasContent) {
         res.value = result.content;
-        await store.dispatch("apis/setQrCode",res.value);
-        if(res.value != ""){
-            const userData = computed(() => store.getters['auth/getUserData'])
-            const retVal = qrParser(res.value,inOrOut.value,userData.value.id,userData.value.partnerWorkingForKitchen.id)
-            resval.value = retVal
-            if(!retVal){
-              await warningToast('OLD/INVALID QR CODE')
-              await hapticsVibrate(300)
-              await stopScan();
+        await store.dispatch('apis/setQrCode', res.value);
+        if (res.value != '') {
+          const userData = computed(() => store.getters['auth/getUserData']);
+          const retVal = qrParser(
+            res.value,
+            inOrOut.value,
+            userData.value.id,
+            userData.value.partnerWorkingForKitchen.id
+          );
+          resval.value = retVal;
+          if (!retVal) {
+            await warningToast('OLD/INVALID QR CODE');
+            await hapticsVibrate(300);
+            await stopScan();
+          } else if (inOrOut.value == 'in') {
+            //call in axios call function
+            const access_token = computed(
+              () => store.getters['auth/getAuthData'].token
+            ).value;
+            // console.log(access_token)
+
+            axios.interceptors.request.use(function (config) {
+              config.headers.Authorization = 'JWT ' + access_token;
+              return config;
+            });
+
+            console.log('waddup: ', JSON.stringify(retVal));
+            const response = await axios.post(
+              'https://fifo-update.cokit.tech/fifo/inputScan',
+              retVal
+            );
+            const loading = await presentLoading();
+            resval.value = response.status;
+            console.log('response text: ', response.data);
+
+            if (
+              response.data == 'Already EXISTS' ||
+              response.data == 'EXISTS'
+            ) {
+              loading.dismiss();
+              // await existsAlert()
+              await warningToast('The packet was already scanned');
+              await hapticsVibrate(300);
             }
-            else if(inOrOut.value == 'in'){
-                //call in axios call function
-                const access_token = computed(() => store.getters['auth/getAuthData'].token).value
-                // console.log(access_token)
-
-                axios.interceptors.request.use(function (config) {
-                    config.headers.Authorization =  "JWT " + access_token;
-                    return config;
-                });
-
-                console.log("waddup: ",JSON.stringify(retVal))
-                const response = await axios.post("https://fifo-update.cokit.tech/fifo/inputScan", retVal);
-                const loading = await presentLoading();
-                resval.value = response.status
-                console.log("response text: ",response.data)
-                if(response.data == 'Already EXISTS' || response.data == 'EXISTS'){
-                  loading.dismiss()
-                  // await existsAlert()
-                  await warningToast('The packet was already scanned')
-                  await hapticsVibrate(300)
-                }else if(response.status == 200 || response.status == 201){
-                  loading.dismiss()
-                  // await successAlert()
-                  await hapticsVibrate(100)
-                  await successToast('Successfully Scanned')
-                }
-            }else if (inOrOut.value == 'out'){
-                console.log("the message here is :", currentOption.value)
-                //call out axios call function
-                const access_token = computed(() => store.getters['auth/getAuthData'].token).value
-                // console.log(access_token)
-
-                axios.interceptors.request.use(function (config) {
-                    config.headers.Authorization =  "JWT " + access_token;
-                    return config;
-                });
-
-                console.log("waddup: ",JSON.stringify(retVal))
-                retVal.outscanType = outscanType.value;
-                retVal.fifoOverride = fifoOverride.value;
-                const response = await axios.post("https://fifo-update.cokit.tech/fifo/outputScan", retVal);
-                const loading = await presentLoading();
-                resval.value = response.status
-                console.log(resval.value)
-                console.log("out response: ",response.data)
-                if(response.data == 'EXISTS'){
-                  loading.dismiss()
-                  // await existsAlert()
-                  await warningToast('The packet was already scanned')
-                  await hapticsVibrate(300)
-                } else if(response.data == 'INPUT SCAN NOT FOUND'){
-                  loading.dismiss()
-                  // await successAlert()
-                  await warningToast('The packet was never input scanned',2000)
-                  await hapticsVibrate(100)
-                } 
-                else if(response.data[0] == 'PACKET FOLLOWS FIFO'){
-                  loading.dismiss()
-                  // await successAlert()
-                  await successToast('Successfully Scanned')
-                  await hapticsVibrate(100)
-                } else if(response.data[0] == 'PACKET DOES NOT FOLLOW FIFO'){
-                  loading.dismiss()
-                  await hapticsVibrate(300)
-                  await noFifoAlert(response.data[1])
-                } else if(response.status == 201 && outscanType.value == 'used' && response.data[0] == "PACKET SENT TO USED PILE"){
-                  loading.dismiss()
-                  await hapticsVibrate(300)
-                  await warningToast('Usage recorded',2000)
-                } else if(response.status == 201 && outscanType.value == 'wasted' && response.data[0] == "PACKET SENT TO WASTED PILE"){
-                  loading.dismiss()
-                  await hapticsVibrate(300)
-                  await warningToast('Wastage recorded',2000)
-                }  else if(response.status == 201 && outscanType.value == 'output' && fifoOverride.value == true){
-                  loading.dismiss()
-                  await hapticsVibrate(300)
-                  await successToast('FIFO OVERRIDE DONE',2000)
-                }
-                
+            //⛳
+            else if (response.data.expDate < today) {
+              loading.dismiss();
+              await expiryAlert();
+              // await successToast(`${response.data.expDate}`);
+              await hapticsVibrate(100);
+              await successToast('Successfully Scanned');
+            } else if (response.status == 200 || response.status == 201) {
+              loading.dismiss();
+              // await successAlert()
+              await hapticsVibrate(100);
+              await successToast('Successfully Scanned');
             }
+          } else if (inOrOut.value == 'out') {
+            console.log('the message here is :', currentOption.value);
+            //call out axios call function
+            const access_token = computed(
+              () => store.getters['auth/getAuthData'].token
+            ).value;
+            // console.log(access_token)
+
+            axios.interceptors.request.use(function (config) {
+              config.headers.Authorization = 'JWT ' + access_token;
+              return config;
+            });
+
+            console.log('waddup: ', JSON.stringify(retVal));
+            retVal.outscanType = outscanType.value;
+            retVal.fifoOverride = fifoOverride.value;
+            const response = await axios.post(
+              'https://fifo-update.cokit.tech/fifo/outputScan',
+              retVal
+            );
+            const loading = await presentLoading();
+            resval.value = response.status;
+            console.log(resval.value);
+            console.log('out response: ', response.data);
+            if (response.data == 'EXISTS') {
+              loading.dismiss();
+              // await existsAlert()
+              await warningToast('The packet was already scanned');
+              await hapticsVibrate(300);
+            } else if (response.data.expDate < today) {
+              loading.dismiss();
+              await expiryAlert();
+              // await successToast(`${response.data.expDate}`);
+              await hapticsVibrate(100);
+              await successToast('Successfully Scanned');
+            } else if (response.data == 'INPUT SCAN NOT FOUND') {
+              loading.dismiss();
+              // await successAlert()
+              await warningToast('The packet was never input scanned', 2000);
+              await hapticsVibrate(100);
+            } else if (response.data[0] == 'PACKET FOLLOWS FIFO') {
+              loading.dismiss();
+              // await successAlert()
+              await successToast('Successfully Scanned');
+              await hapticsVibrate(100);
+            } else if (response.data[0] == 'PACKET DOES NOT FOLLOW FIFO') {
+              loading.dismiss();
+              await hapticsVibrate(300);
+              await noFifoAlert(response.data[1]);
+            } else if (
+              response.status == 201 &&
+              outscanType.value == 'used' &&
+              response.data[0] == 'PACKET SENT TO USED PILE'
+            ) {
+              loading.dismiss();
+              await hapticsVibrate(300);
+              await warningToast('Usage recorded', 2000);
+            } else if (
+              response.status == 201 &&
+              outscanType.value == 'wasted' &&
+              response.data[0] == 'PACKET SENT TO WASTED PILE'
+            ) {
+              loading.dismiss();
+              await hapticsVibrate(300);
+              await warningToast('Wastage recorded', 2000);
+            } else if (
+              response.status == 201 &&
+              outscanType.value == 'output' &&
+              fifoOverride.value == true
+            ) {
+              loading.dismiss();
+              await hapticsVibrate(300);
+              await successToast('FIFO OVERRIDE DONE', 2000);
+            }
+          }
         }
       }
-      if (resval.value == 200 || resval.value == 201){
+      if (resval.value == 200 || resval.value == 201) {
         await stopScan();
       }
     };
 
     const existsAlert = async () => {
-      const alert = await alertController
-        .create({
-          cssClass: 'exists-alert',
-          header: 'Alert',
-          subHeader: 'Already Exists',
-          message: 'The packet was already scanned',
-          buttons: ['OK'],
-        });
+      const alert = await alertController.create({
+        cssClass: 'exists-alert',
+        header: 'Alert',
+        subHeader: 'Already Exists',
+        message: 'The packet was already scanned',
+        buttons: ['OK'],
+      });
       await alert.present();
 
       const { role } = await alert.onDidDismiss();
       console.log('onDidDismiss resolved with role', role);
-    }
+    };
 
     const successAlert = async () => {
-      const alert = await alertController
-        .create({
-          cssClass: 'success-alert',
-          header: 'Alert',
-          subHeader: 'Success',
-          message: 'Successfully Scanned',
-          buttons: ['OK'],
-        });
+      const alert = await alertController.create({
+        cssClass: 'success-alert',
+        header: 'Alert',
+        subHeader: 'Success',
+        message: 'Successfully Scanned',
+        buttons: ['OK'],
+      });
       await alert.present();
 
       const { role } = await alert.onDidDismiss();
       console.log('onDidDismiss resolved with role', role);
-    }
+    };
+    //⛳
+    const expiryAlert = async () => {
+      const alert = await alertController.create({
+        cssClass: 'noFifo-alert',
+        header: 'Alert',
+        subHeader: 'This Packet has expired ',
+        message: 'Do you still want to continue ?',
+        buttons: ['YES'],
+      });
+      await alert.present();
+
+      const { role } = await alert.onDidDismiss();
+      console.log('onDidDismiss resolved with role', role);
+    };
 
     const noFifoAlert = async (dataObj) => {
-      surroundCover.value.style.boxShadow = "0 0 0 99999px rgba(153, 0, 0, 0.7)";
+      surroundCover.value.style.boxShadow =
+        '0 0 0 99999px rgba(153, 0, 0, 0.7)';
       NativeAudio.play({
-          assetId: 'error',
-          // time: 6.0 - seek time
+        assetId: 'error',
+        // time: 6.0 - seek time
       });
-      const alert = await alertController
-        .create({
-          cssClass: 'noFifo-alert',
-          header: 'Alert',
-          subHeader: 'FIFO NOT FOLLOWED',
-          message: 'Please get this packet with date of manufacture instead : ' + qrParserDateOfMfg(dataObj.qrcode),
-          buttons: ['OK'],
-        });
+      const alert = await alertController.create({
+        cssClass: 'noFifo-alert',
+        header: 'Alert',
+        subHeader: 'FIFO NOT FOLLOWED',
+        message:
+          'Please get this packet with date of manufacture instead : ' +
+          qrParserDateOfMfg(dataObj.qrcode),
+        buttons: ['OK'],
+      });
       await alert.present();
 
       const { role } = await alert.onDidDismiss();
       console.log('onDidDismiss resolved with role', role);
-    }
+    };
 
-
-    const warningToast = async (msgg,durr=2000) => {
-      surroundCover.value.style.boxShadow = "0 0 0 99999px rgba(255, 255, 0, 0.7)";
-
-      NativeAudio.play({
-          assetId: 'error',
-          // time: 6.0 - seek time
-      });
-      
-      const toast = await toastController
-        .create({
-          message: msgg,
-          duration: durr,
-          cssClass: 'warningt'
-        })
-      return toast.present();
-    }
-
-    const successToast = async (msgg,durr=2000) => {
-      surroundCover.value.style.boxShadow = "0 0 0 99999px rgba(0, 153, 51, 0.7)";
+    const warningToast = async (msgg, durr = 2000) => {
+      surroundCover.value.style.boxShadow =
+        '0 0 0 99999px rgba(255, 255, 0, 0.7)';
 
       NativeAudio.play({
-          assetId: 'success',
-          // time: 6.0 - seek time
+        assetId: 'error',
+        // time: 6.0 - seek time
       });
 
-      const toast = await toastController
-        .create({
-          message: msgg,
-          duration: durr,
-          cssClass: 'successt'
-        })
+      const toast = await toastController.create({
+        message: msgg,
+        duration: durr,
+        cssClass: 'warningt',
+      });
       return toast.present();
-    }
+    };
 
-    
+    const successToast = async (msgg, durr = 2000) => {
+      surroundCover.value.style.boxShadow =
+        '0 0 0 99999px rgba(0, 153, 51, 0.7)';
+
+      NativeAudio.play({
+        assetId: 'success',
+        // time: 6.0 - seek time
+      });
+
+      const toast = await toastController.create({
+        message: msgg,
+        duration: durr,
+        cssClass: 'successt',
+      });
+      return toast.present();
+    };
 
     const presentLoading = async () => {
-      const loading = await loadingController
-        .create({
-          cssClass: 'loading-spinner',
-          message: 'Please wait...',
-        });
-        
+      const loading = await loadingController.create({
+        cssClass: 'loading-spinner',
+        message: 'Please wait...',
+      });
+
       await loading.present();
-      return loading
-    }
+      return loading;
+    };
 
     const hapticsVibrate = async (duration) => {
       await Haptics.vibrate(duration);
@@ -343,7 +406,7 @@ export default  defineComponent({
         // the user denied permission for good
         // redirect user to app settings if they want to grant it anyway
         const c = confirm(
-          'If you want to grant permission for using your camera, enable it in the app settings.',
+          'If you want to grant permission for using your camera, enable it in the app settings.'
         );
         if (c) {
           BarcodeScanner.openAppSettings();
@@ -353,19 +416,19 @@ export default  defineComponent({
       return false;
     };
     const stopScan = async () => {
-      showOrNot.value = false
+      showOrNot.value = false;
       await BarcodeScanner.showBackground();
       await BarcodeScanner.stopScan();
       keyVal.value += 1;
     };
     const stopScanBtn = async () => {
-      showOrNot.value = false
+      showOrNot.value = false;
       await BarcodeScanner.showBackground();
       await BarcodeScanner.stopScan();
-      router.replace({path:'/tabs/tab2'})
+      router.replace({ path: '/tabs/tab2' });
     };
     const stopScanBack = async () => {
-      showOrNot.value = false
+      showOrNot.value = false;
       BarcodeScanner.showBackground();
       await BarcodeScanner.stopScan();
       await BarcodeScanner.stopScan();
@@ -386,152 +449,145 @@ export default  defineComponent({
       hapticsVibrate,
       surroundCover,
       IonButton,
-      currentOption
-    }
-  }
+      currentOption,
+    };
+  },
 });
 </script>
 
 <style scoped>
-      * {
-        box-sizing: border-box;
-      }
-      p {
-        color: #fff;
-        font-family: sans-serif;
-        text-align: center;
-        font-weight: 600;
-      }
-      html,
-      body,
-      .container {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-      }
-      .container {
-        display: flex;
-      }
-      .relative {
-        position: relative;
-        z-index: 1;
-      }
-      .square {
-        width: 100%;
-        position: relative;
-        overflow: hidden;
-        transition: 0.3s;
-      }
-      .square:after {
-        content: '';
-        top: 0;
-        display: block;
-        padding-bottom: 100%;
-      }
-      .square > div {
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-      }
-      .surround-cover {
-        box-shadow: 0 0 0 99999px rgba(0, 0, 0, 0.5);
-      }
-      .barcode-scanner--area--container {
-        width: 80%;
-        max-width: min(500px, 80vh);
-        margin: auto;
-      }
-      .barcode-scanner--area--outer {
-        display: flex;
-        border-radius: 1em;
-      }
-      .barcode-scanner--area--inner {
-        width: 100%;
-        margin: 1rem;
-        border: 2px solid #fff;
-        box-shadow: 0px 0px 2px 1px rgb(0 0 0 / 0.5),
-          inset 0px 0px 2px 1px rgb(0 0 0 / 0.5);
-        border-radius: 1rem;
-      }
+* {
+  box-sizing: border-box;
+}
+p {
+  color: #fff;
+  font-family: sans-serif;
+  text-align: center;
+  font-weight: 600;
+}
+html,
+body,
+.container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.container {
+  display: flex;
+}
+.relative {
+  position: relative;
+  z-index: 1;
+}
+.square {
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  transition: 0.3s;
+}
+.square:after {
+  content: '';
+  top: 0;
+  display: block;
+  padding-bottom: 100%;
+}
+.square > div {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+.surround-cover {
+  box-shadow: 0 0 0 99999px rgba(0, 0, 0, 0.5);
+}
+.barcode-scanner--area--container {
+  width: 80%;
+  max-width: min(500px, 80vh);
+  margin: auto;
+}
+.barcode-scanner--area--outer {
+  display: flex;
+  border-radius: 1em;
+}
+.barcode-scanner--area--inner {
+  width: 100%;
+  margin: 1rem;
+  border: 2px solid #fff;
+  box-shadow: 0px 0px 2px 1px rgb(0 0 0 / 0.5),
+    inset 0px 0px 2px 1px rgb(0 0 0 / 0.5);
+  border-radius: 1rem;
+}
 
-      
-      @keyframes shake {
-        0% {
-          transform: translate(0, 0) rotate(0deg) scale(1);
-        }
-        20% {
-          transform: translate(5px, 5px) rotate(-1deg) scale(1.05);
-        }
-        40% {
-          transform: translate(5px, 5px) rotate(-2deg) scale(1.07);
-        }
-        60% {
-          transform: translate(2px, 2px) rotate(0deg) scale(1.04);
-        }
-        80% {
-          transform: translate(-1px, -1px) rotate(-2deg) scale(1.05);
-        }
-        100% {
-          transform: translate(0, 0) rotate(0deg) scale(1);
-        }
-      }
+@keyframes shake {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  20% {
+    transform: translate(5px, 5px) rotate(-1deg) scale(1.05);
+  }
+  40% {
+    transform: translate(5px, 5px) rotate(-2deg) scale(1.07);
+  }
+  60% {
+    transform: translate(2px, 2px) rotate(0deg) scale(1.04);
+  }
+  80% {
+    transform: translate(-1px, -1px) rotate(-2deg) scale(1.05);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+}
 
-      .buttonDown{
-        width:100%;
-        position:absolute;
-        z-index: 10;
-        top: 90%;
-        margin-right: auto;
-        left: 0;
-        right: 0;
-        text-align: center;
-      }
+.buttonDown {
+  width: 100%;
+  position: absolute;
+  z-index: 10;
+  top: 90%;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
 
-      .currentOptionCss{
-        width:100%;
-        position:absolute;
-        z-index: 8;
-        top: 20%;
-        margin-right: auto;
-        left: 0;
-        right: 0;
-        text-align: center;
-      }
+.currentOptionCss {
+  width: 100%;
+  position: absolute;
+  z-index: 8;
+  top: 20%;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
 
-      .currentOptionCss p{
-        color: #fff;
-        font-family: sans-serif;
-        text-align: center;
-        font-weight: 600;
-      }
-
-
-      
+.currentOptionCss p {
+  color: #fff;
+  font-family: sans-serif;
+  text-align: center;
+  font-weight: 600;
+}
 </style>
 <style>
-      .exists-alert{
-        --background: rgb(255,255,0);
-      }
-      .success-alert{
-        --background: rgb(3, 249, 3);
-      }
-      .noFifo-alert{
-        --background: rgb(124, 4, 4);
-        --ion-text-color: rgb(225,225,225);
-      }
-      .successt{
-        --background: rgb(4, 111, 4);
-      }
-      .warningt{
-        --background: rgb(188, 188, 7);
-      }
+.exists-alert {
+  --background: rgb(255, 255, 0);
+}
+.success-alert {
+  --background: rgb(3, 249, 3);
+}
+.noFifo-alert {
+  --background: rgb(124, 4, 4);
+  --ion-text-color: rgb(225, 225, 225);
+}
+.successt {
+  --background: rgb(4, 111, 4);
+}
+.warningt {
+  --background: rgb(188, 188, 7);
+}
 
-      .alert-message.sc-ion-alert-md{
-        color: white;
-      }
-
+.alert-message.sc-ion-alert-md {
+  color: white;
+}
 </style>
-
-
