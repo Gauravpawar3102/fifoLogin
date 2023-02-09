@@ -169,7 +169,7 @@ export default defineComponent({
 
             console.log('waddup: ', JSON.stringify(retVal));
             const response = await axios.post(
-              'https://fifo-update.cokit.tech/fifo/inputScan',
+              'https://deepco.in/fifo/inputScan',
               retVal
             );
             const loading = await presentLoading();
@@ -215,7 +215,7 @@ export default defineComponent({
             retVal.outscanType = outscanType.value;
             retVal.fifoOverride = fifoOverride.value;
             const response = await axios.post(
-              'https://fifo-update.cokit.tech/fifo/outputScan',
+              'https://deepco.in/fifo/outputScan',
               retVal
             );
             const loading = await presentLoading();

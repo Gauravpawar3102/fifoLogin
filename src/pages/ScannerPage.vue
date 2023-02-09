@@ -22,7 +22,7 @@
           <div><p></p></div>
           <div><p></p></div>
           <ion-button
-            v-if="userData.partnerType === 'Manager'"
+            v-if="userData.partnerType === 'Manager' || 'Admin'"
             @click="startScan('out', 'output', true)"
             >OverRide FIFO</ion-button
           >
