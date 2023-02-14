@@ -65,7 +65,7 @@ const actions = {
   loginUser: async ({ commit }, payload) => {
     try {
       const response = await axios.post(
-        'https://deepco.in/auth/jwt/create/',
+        'https://fifo-update.cokit.tech/auth/jwt/create/',
         payload.value
       );
       console.log(response.data);
@@ -117,7 +117,7 @@ const actions = {
       },
     };
     const response = await axios.get(
-      'https://deepco.in/auth/users/me/',
+      'https://fifo-update.cokit.tech/auth/users/me/',
       yourConfig
     );
     console.log(response.data);
