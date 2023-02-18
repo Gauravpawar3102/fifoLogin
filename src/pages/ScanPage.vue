@@ -135,9 +135,6 @@ export default defineComponent({
 
       const result = await BarcodeScanner.startScan(); // start scanning and wait for a result
 
-      ////⛳Todays date
-      var today = new Date().toISOString().split('T')[0];
-
       // if the result has content
       if (result.hasContent) {
         res.value = result.content;
@@ -169,13 +166,12 @@ export default defineComponent({
 
             console.log('waddup: ', JSON.stringify(retVal));
             const response = await axios.post(
-              'https://fifo-update.cokit.tech/fifo/inputScan',
+              'https://deepco.in/fifo/inputScan',
               retVal
             );
             const loading = await presentLoading();
             resval.value = response.status;
             console.log('response text: ', response.data);
-
             if (
               response.data == 'Already EXISTS' ||
               response.data == 'EXISTS'
@@ -184,14 +180,6 @@ export default defineComponent({
               // await existsAlert()
               await warningToast('The packet was already scanned');
               await hapticsVibrate(300);
-            }
-            //⛳
-            else if (response.data.expDate < today) {
-              loading.dismiss();
-              await expiryAlert();
-              // await successToast(`${response.data.expDate}`);
-              await hapticsVibrate(100);
-              await successToast('Successfully Scanned');
             } else if (response.status == 200 || response.status == 201) {
               loading.dismiss();
               // await successAlert()
@@ -215,7 +203,7 @@ export default defineComponent({
             retVal.outscanType = outscanType.value;
             retVal.fifoOverride = fifoOverride.value;
             const response = await axios.post(
-              'https://fifo-update.cokit.tech/fifo/outputScan',
+              'https://deepco.in/fifo/outputScan',
               retVal
             );
             const loading = await presentLoading();
@@ -227,12 +215,6 @@ export default defineComponent({
               // await existsAlert()
               await warningToast('The packet was already scanned');
               await hapticsVibrate(300);
-            } else if (response.data.expDate < today) {
-              loading.dismiss();
-              await expiryAlert();
-              // await successToast(`${response.data.expDate}`);
-              await hapticsVibrate(100);
-              await successToast('Successfully Scanned');
             } else if (response.data == 'INPUT SCAN NOT FOUND') {
               loading.dismiss();
               // await successAlert()
@@ -301,20 +283,6 @@ export default defineComponent({
         subHeader: 'Success',
         message: 'Successfully Scanned',
         buttons: ['OK'],
-      });
-      await alert.present();
-
-      const { role } = await alert.onDidDismiss();
-      console.log('onDidDismiss resolved with role', role);
-    };
-    //⛳
-    const expiryAlert = async () => {
-      const alert = await alertController.create({
-        cssClass: 'noFifo-alert',
-        header: 'Alert',
-        subHeader: 'This Packet has expired ',
-        message: 'Do you still want to continue ?',
-        buttons: ['YES'],
       });
       await alert.present();
 
