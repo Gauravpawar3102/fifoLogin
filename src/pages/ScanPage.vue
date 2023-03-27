@@ -14,7 +14,17 @@
         </div>
         <div class="square surround-cover" ref="surroundCover">
           <div class="barcode-scanner--area--outer surround-cover">
-            <div class="barcode-scanner--area--inner"></div>
+            <div class="barcode-scanner--area--inner">
+              <ion-list v-if="outscanType.value == 'usage'">
+                <ion-item>
+                  <ion-select placeholder="Select used units">
+                    <ion-select-option value="1">1</ion-select-option>
+                    <ion-select-option value="2">2</ion-select-option>
+                    <ion-select-option value="3">3</ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </ion-list>
+            </div>
           </div>
         </div>
       </div>
@@ -37,6 +47,8 @@ import {
   toastController,
   IonButton,
 } from '@ionic/vue';
+import { IonItem, IonList, IonSelect, IonSelectOption } from '@ionic/vue';
+
 import { ref } from 'vue';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { useRouter, onBeforeRouteLeave } from 'vue-router';
@@ -49,7 +61,7 @@ import { NativeAudio } from '@capacitor-community/native-audio';
 
 export default defineComponent({
   name: 'ScanPage',
-  components: { IonPage },
+  components: { IonPage, IonItem, IonList, IonSelect, IonSelectOption },
   setup() {
     const router = useRouter();
 
@@ -166,7 +178,7 @@ export default defineComponent({
 
             console.log('waddup: ', JSON.stringify(retVal));
             const response = await axios.post(
-              'https://deepco.in/fifo/inputScan',
+              'http://deepco.in/fifo/inputScan',
               retVal
             );
             const loading = await presentLoading();
@@ -203,13 +215,82 @@ export default defineComponent({
             retVal.outscanType = outscanType.value;
             retVal.fifoOverride = fifoOverride.value;
             const response = await axios.post(
-              'https://deepco.in/fifo/outputScan',
+              'http://deepco.in/fifo/outputScan',
               retVal
             );
             const loading = await presentLoading();
             resval.value = response.status;
             console.log(resval.value);
             console.log('out response: ', response.data);
+            if (response.data == 'EXISTS') {
+              loading.dismiss();
+              // await existsAlert()
+              await warningToast('The packet was already scanned');
+              await hapticsVibrate(300);
+            } else if (response.data == 'INPUT SCAN NOT FOUND') {
+              loading.dismiss();
+              // await successAlert()
+              await warningToast('The packet was never input scanned', 2000);
+              await hapticsVibrate(100);
+            } else if (response.data[0] == 'PACKET FOLLOWS FIFO') {
+              loading.dismiss();
+              // await successAlert()
+              await successToast('Successfully Scanned');
+              await hapticsVibrate(100);
+            } else if (response.data[0] == 'PACKET DOES NOT FOLLOW FIFO') {
+              loading.dismiss();
+              await hapticsVibrate(300);
+              await noFifoAlert(response.data[1]);
+            } else if (
+              response.status == 201 &&
+              outscanType.value == 'used' &&
+              response.data[0] == 'PACKET SENT TO USED PILE'
+            ) {
+              loading.dismiss();
+              await hapticsVibrate(300);
+              await warningToast('Usage recorded', 2000);
+            } else if (
+              response.status == 201 &&
+              outscanType.value == 'wasted' &&
+              response.data[0] == 'PACKET SENT TO WASTED PILE'
+            ) {
+              loading.dismiss();
+              await hapticsVibrate(300);
+              await warningToast('Wastage recorded', 2000);
+            } else if (
+              response.status == 201 &&
+              outscanType.value == 'output' &&
+              fifoOverride.value == true
+            ) {
+              loading.dismiss();
+              await hapticsVibrate(300);
+              await successToast('FIFO OVERRIDE DONE', 2000);
+            }
+          } else if (outscanType.value == 'usage') {
+            console.log('the message here is :', currentOption.value);
+            //call out axios call function
+            const access_token = computed(
+              () => store.getters['auth/getAuthData'].token
+            ).value;
+            // console.log(access_token)
+
+            axios.interceptors.request.use(function (config) {
+              config.headers.Authorization = 'JWT ' + access_token;
+              return config;
+            });
+
+            console.log('waddup: ', JSON.stringify(retVal));
+            retVal.outscanType = outscanType.value;
+            retVal.fifoOverride = fifoOverride.value;
+            retVal.used = 1;
+            const response = await axios.post(
+              'http://deepco.in/fifo/usageScan',
+              retVal
+            );
+            const loading = await presentLoading();
+            resval.value = response.status;
+            console.log(resval.value);
+            console.log('usage response: ', response.data);
             if (response.data == 'EXISTS') {
               loading.dismiss();
               // await existsAlert()

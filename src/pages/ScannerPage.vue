@@ -36,7 +36,11 @@
           <ion-button @click="startScan('out', 'wasted')"
             >Wastage Scan</ion-button
           >
-
+          <div><p></p></div>
+          <div><p></p></div>
+          <ion-button @click="startScan('out', 'usage', false)"
+            >Usage Scan</ion-button
+          >
           <!-- <ion-button @click="checkPermission">GrantPerm</ion-button> -->
         </div>
       </div>
@@ -98,7 +102,7 @@ export default defineComponent({
       userData.value = store.getters['auth/getUserData'];
       console.log(userData.value.partnerType);
     });
-
+    const outscanType = computed(() => store.getters['apis/getOutScanType']);
     const startScan = async (inOut, outScanType, fifoOverride = false) => {
       inOrOut.value = inOut;
       await store.dispatch('apis/setInOrOut', inOut);
@@ -106,6 +110,7 @@ export default defineComponent({
       await store.dispatch('apis/setFifoOverride', fifoOverride);
       await store.dispatch('apis/setQrCode', '');
       console.log('ssup');
+      console.log('outscanType', outscanType);
       router.push({ path: '/scan' });
     };
 
