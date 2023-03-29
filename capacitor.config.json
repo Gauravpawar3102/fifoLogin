@@ -1,6 +1,6 @@
 {
-	"appId": "io.ionic.starter",
-	"appName": "fifoLogin",
-	"webDir": "dist",
-	"bundledWebRuntime": false
+  "appId": "io.ionic.starter",
+  "appName": "fifoLogin",
+  "webDir": "dist",
+  "bundledWebRuntime": false
 }
