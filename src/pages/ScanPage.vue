@@ -15,7 +15,7 @@
         <div class="square surround-cover" ref="surroundCover">
           <div class="barcode-scanner--area--outer surround-cover">
             <div class="barcode-scanner--area--inner">
-              <ion-list v-if="outscanType.value == 'usage'">
+              <ion-list v-if="inOrOut.value == 'usage'">
                 <ion-item>
                   <ion-select placeholder="Select used units">
                     <ion-select-option value="1">1</ion-select-option>
@@ -141,8 +141,9 @@ export default defineComponent({
         currentOption.value = 'OUTPUT SCAN';
       } else if (inOrOut.value == 'out' && fifoOverride.value == true) {
         currentOption.value = 'FIFO OVER-RIDE SCAN';
+      } else if (inOrOut.value == 'usage') {
+        currentOption.value = 'USAGE SCAN';
       }
-
       document.body.style.background = 'transparent';
 
       const result = await BarcodeScanner.startScan(); // start scanning and wait for a result
@@ -266,7 +267,7 @@ export default defineComponent({
               await hapticsVibrate(300);
               await successToast('FIFO OVERRIDE DONE', 2000);
             }
-          } else if (outscanType.value == 'usage') {
+          } else if (inOrOut.value == 'usage') {
             console.log('the message here is :', currentOption.value);
             //call out axios call function
             const access_token = computed(
@@ -281,7 +282,7 @@ export default defineComponent({
 
             console.log('waddup: ', JSON.stringify(retVal));
             retVal.outscanType = outscanType.value;
-            retVal.fifoOverride = fifoOverride.value;
+
             retVal.used = 1;
             const response = await axios.post(
               'https://fifo.deepco.in/fifo/usageScan',

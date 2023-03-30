@@ -38,7 +38,7 @@
           >
           <div><p></p></div>
           <div><p></p></div>
-          <ion-button @click="startScan('out', 'usage', false)"
+          <ion-button @click="startScan('usage', 'usage')"
             >Usage Scan</ion-button
           >
           <!-- <ion-button @click="checkPermission">GrantPerm</ion-button> -->
