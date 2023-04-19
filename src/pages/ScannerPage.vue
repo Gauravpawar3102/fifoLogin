@@ -104,7 +104,11 @@ export default defineComponent({
     });
     const outscanType = computed(() => store.getters['apis/getOutScanType']);
     const startScan = async (inOut, outScanType, fifoOverride = false) => {
+      console.log('outscanType', outscanType);
+      console.log('inOut', inOut);
+
       inOrOut.value = inOut;
+
       await store.dispatch('apis/setInOrOut', inOut);
       await store.dispatch('apis/setOutScanType', outScanType);
       await store.dispatch('apis/setFifoOverride', fifoOverride);
