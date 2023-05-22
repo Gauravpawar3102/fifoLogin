@@ -65,6 +65,14 @@ export function jwtDecrypt(token) {
 // <itemOrRecipeTypeIndicator>=<itemOrRecipeId>#<brandId>#<kitchenId>#<shelfLife>#<size> <unitForMeasure>#<Mfg>#<time> <AM/PM>#<timeInMilliSec+RandomNumber for making it unique>
 
 export function qrParser(qrCode, inOrOut, userID, kitchenID) {
+  // return new Promise((resolve, reject) => {
+  // setTimeout(() => {
+  // if (conditions) {
+  //   resolve('Hello');
+  // } else {
+  //   reject('This condition faild');
+  // }
+  // }, 2000);
   Date.prototype.addDays = function (days) {
     var date = new Date(this.valueOf());
     date.setDate(date.getDate() + days);
@@ -78,6 +86,7 @@ export function qrParser(qrCode, inOrOut, userID, kitchenID) {
     return false;
   }
   const myArray = qrCode.split('#');
+
   let temp = myArray[0].split('=');
   let shelfLife = 0;
   let dom;
@@ -95,6 +104,8 @@ export function qrParser(qrCode, inOrOut, userID, kitchenID) {
     retVal.destKitchen = kitchenID;
   } else if (inOrOut == 'out') {
     retVal.sourceKitchen = kitchenID;
+  } else if (inOrOut == 'usage') {
+    retVal.destKitchen = kitchenID;
   }
 
   temp = myArray[3];
@@ -102,6 +113,10 @@ export function qrParser(qrCode, inOrOut, userID, kitchenID) {
 
   temp = myArray[4].split(' ');
   retVal.unitChange = Number(temp[0]);
+  console.log(temp[0]);
+  console.log(temp[1]);
+  console.log(temp[2]);
+  retVal.unitForMeasurement = temp[1];
 
   // retVal.unitChange = null
   dom = myArray[5] + 'T' + myArray[6];
@@ -114,7 +129,19 @@ export function qrParser(qrCode, inOrOut, userID, kitchenID) {
   retVal.batchDetails = 'nothing';
   retVal.partnerID = userID;
 
+  console.log(myArray[0]);
+  console.log(myArray[1]);
+  console.log(myArray[2]);
+  console.log(myArray[3]);
+  console.log(myArray[4]);
+  console.log(temp[4]);
+  console.log(myArray[5]);
   return retVal;
+
+  // resolve(retVal);
+
+  // reject('No Retval');
+  // });
 }
 
 export function qrParserDateOfMfg(qrCode) {

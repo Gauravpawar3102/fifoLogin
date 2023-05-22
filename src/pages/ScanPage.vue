@@ -4,8 +4,19 @@
       <div class="currentOptionCss">
         <p>{{ currentOption }}</p>
       </div>
+
       <div class="buttonDown">
-        <ion-button @click="stopScanBtn">GO BACK</ion-button>
+        <ion-item v-if="currentOption === 'USAGE SCAN'">
+          <ion-input
+            label="Enter No of items "
+            label-placement="floating"
+            fill="solid"
+            placeholder="Enter Number of quantity used"
+            v-model="inputValue"
+          ></ion-input>
+          <ion-button @click="submit">update</ion-button>
+        </ion-item>
+        <ion-button class="goback" @click="stopScanBtn">GO BACK</ion-button>
       </div>
       <div class="barcode-scanner--area--container">
         <div class="relative">
@@ -24,6 +35,7 @@
 
 <script>
 import {
+  toRaw,
   computed,
   defineComponent,
   onMounted,
@@ -36,6 +48,9 @@ import {
   loadingController,
   toastController,
   IonButton,
+  // IonInput,
+  IonInput,
+  IonItem,
 } from '@ionic/vue';
 
 import { ref } from 'vue';
@@ -48,15 +63,31 @@ import { Haptics } from '@capacitor/haptics';
 // import { createAnimation } from '@ionic/vue';
 import { NativeAudio } from '@capacitor-community/native-audio';
 
+// const inputTaker = createComponent({
+//   components: { IonInput },
+//   setup() {
+//     const inputRef = ref(null);
+//     const inputValue = ref('');
+
+//     function handleInput(event) {
+//       inputValue.value = event.target.value;
+//     }
+
+//     return { inputRef, inputValue, handleInput };
+//   },
+// });
+
 export default defineComponent({
   name: 'ScanPage',
-  components: { IonPage },
+  components: { IonPage, IonInput, IonItem },
   setup() {
     const router = useRouter();
+    const inputValue = ref('');
 
     const res = ref('blank');
 
     const resval = ref('blank');
+    const usageRetVal = ref('blank');
 
     const keyVal = ref(1);
 
@@ -73,10 +104,14 @@ export default defineComponent({
     });
 
     onUnmounted(async () => {
+      // console.log('onUnmounted stopScan called');
+
       await BarcodeScanner.stopScan();
     });
 
     onBeforeRouteLeave(async () => {
+      // console.log('onBeforeRouteLeave stopScan called');
+
       await stopScanBack();
     });
 
@@ -132,6 +167,7 @@ export default defineComponent({
         currentOption.value = 'FIFO OVER-RIDE SCAN';
       } else if (inOrOut.value == 'usage') {
         currentOption.value = 'USAGE SCAN';
+        console.log(currentOption.value);
       }
       document.body.style.background = 'transparent';
 
@@ -140,21 +176,34 @@ export default defineComponent({
       // if the result has content
       if (result.hasContent) {
         res.value = result.content;
+        // await warningToast(res.value, 2000);
         await store.dispatch('apis/setQrCode', res.value);
         if (res.value != '') {
           const userData = computed(() => store.getters['auth/getUserData']);
+          console.log(userData);
+          // warningToast(userData,2000)
           const retVal = qrParser(
             res.value,
             inOrOut.value,
             userData.value.id,
-            userData.value.partnerWorkingForKitchen.id
+            userData.value.partnerWorkingForKitchen.id //it is null
+            // userData.value.partnerWorkingForKitchen.id //(previous)
           );
           resval.value = retVal;
+          // await warningToast(retVal, 2000);
+          usageRetVal.value = retVal;
           if (!retVal) {
+            await warningToast('No retval', 2000);
+
             await warningToast('OLD/INVALID QR CODE');
             await hapticsVibrate(300);
             await stopScan();
           } else if (inOrOut.value == 'in') {
+            // await warningToast(
+            //   `im inside inputscan ${inOrOut.value} and ${retVal}`,
+            //   2000
+            // );
+
             //call in axios call function
             const access_token = computed(
               () => store.getters['auth/getAuthData'].token
@@ -167,6 +216,7 @@ export default defineComponent({
             });
 
             console.log('waddup: ', JSON.stringify(retVal));
+            console.log(retVal);
             const response = await axios.post(
               'https://fifo.deepco.in/fifo/inputScan',
               retVal
@@ -211,6 +261,8 @@ export default defineComponent({
             const loading = await presentLoading();
             resval.value = response.status;
             console.log(resval.value);
+            await warningToast(resval.value, 2000);
+
             console.log('out response: ', response.data);
             if (response.data == 'EXISTS') {
               loading.dismiss();
@@ -260,83 +312,123 @@ export default defineComponent({
             console.log('the message here is :', currentOption.value);
             //call out axios call function
 
-            await warningToast('usage', inOrOut.value);
-            const access_token = computed(
-              () => store.getters['auth/getAuthData'].token
-            ).value;
-            // console.log(access_token)
+            await warningToast(
+              //add quantity type
 
-            axios.interceptors.request.use(function (config) {
-              config.headers.Authorization = 'JWT ' + access_token;
-              return config;
-            });
+              'Enter the no of quantity' +
+                // retVal.unitForMeasurement +
+                ' used out of ' +
+                retVal.unitChange +
+                retVal.unitForMeasurement,
+              4000
+            );
 
             console.log('waddup: ', JSON.stringify(retVal));
 
             retVal.outscanType = outscanType.value;
-            router.push({ path: '/usage' });
 
-            // retVal.used = 1;//add state here of selected value from usage page
-            // const response = await axios.post(
-            //   'https://fifo.deepco.in/fifo/usageScan',
-            //   retVal
-            // );
-            // const loading = await presentLoading();
-            // resval.value = response.status;
-            // console.log(resval.value);
-            // console.log('usage response: ', response.data);
-            // if (response.data == 'EXISTS') {
-            //   loading.dismiss();
-            //   // await existsAlert()
-            //   await warningToast('The packet was already scanned');
-            //   await hapticsVibrate(300);
-            // } else if (response.data == 'INPUT SCAN NOT FOUND') {
-            //   loading.dismiss();
-            //   // await successAlert()
-            //   await warningToast('The packet was never input scanned', 2000);
-            //   await hapticsVibrate(100);
-            // } else if (response.data[0] == 'PACKET FOLLOWS FIFO') {
-            //   loading.dismiss();
-            //   // await successAlert()
-            //   await successToast('Successfully Scanned');
-            //   await hapticsVibrate(100);
-            // } else if (response.data[0] == 'PACKET DOES NOT FOLLOW FIFO') {
-            //   loading.dismiss();
-            //   await hapticsVibrate(300);
-            //   await noFifoAlert(response.data[1]);
-            // } else if (
-            //   response.status == 201 &&
-            //   outscanType.value == 'used' &&
-            //   response.data[0] == 'PACKET SENT TO USED PILE'
-            // ) {
-            //   loading.dismiss();
-            //   await hapticsVibrate(300);
-            //   await warningToast('Usage recorded', 2000);
-            // } else if (
-            //   response.status == 201 &&
-            //   outscanType.value == 'wasted' &&
-            //   response.data[0] == 'PACKET SENT TO WASTED PILE'
-            // ) {
-            //   loading.dismiss();
-            //   await hapticsVibrate(300);
-            //   await warningToast('Wastage recorded', 2000);
-            // } else if (
-            //   response.status == 201 &&
-            //   outscanType.value == 'output' &&
-            //   fifoOverride.value == true
-            // ) {
-            //   loading.dismiss();
-            //   await hapticsVibrate(300);
-            //   await successToast('FIFO OVERRIDE DONE', 2000);
-            // }
+            //add state here of selected value from usage page
+            // inputTaker();
+            retVal.used = inputValue.value;
+            console.log(resval.value);
           }
         }
+        console.log(resval);
+        console.log(resval.value);
       }
+      // if (outscanType.value !== 'usage') {
       if (resval.value == 200 || resval.value == 201) {
+        // await warningToast('im here', 2000);
+        //may be here it stopping scanner
+        console.log('calling stop scan');
         await stopScan();
+        // }
       }
     };
+    const submit = async () => {
+      // debugger;
 
+      // console.log(usageRetVal.value);
+      // if (!inputValue.value) {
+      //   return warningToast('please enter inputvalue ', 2000);
+      // }
+      const access_token = computed(
+        () => store.getters['auth/getAuthData'].token
+      ).value;
+      console.log('access' + access_token);
+
+      axios.interceptors.request.use(function (config) {
+        config.headers.Authorization = 'JWT ' + access_token;
+        return config;
+      });
+
+      usageRetVal.value.used = parseInt(inputValue.value);
+      usageRetVal.value.fifoOverride = false;
+      console.log(usageRetVal.value.used);
+      console.log(toRaw(usageRetVal.value));
+      console.log(usageRetVal.value);
+
+      const response = await axios.post(
+        'https://fifo.deepco.in/fifo/usageScan',
+        toRaw(usageRetVal.value)
+      );
+      const loading = await presentLoading();
+      resval.value = response.status;
+      console.log(resval.value);
+      console.log('usage response: ', response.data);
+      if (response.data == 'EXISTS') {
+        loading.dismiss();
+        // await existsAlert()
+        await warningToast('The packet was already scanned');
+        await hapticsVibrate(300);
+      } else if (response.data == 'USED') {
+        loading.dismiss();
+        // await existsAlert()
+        await warningToast('Item is used ');
+        await hapticsVibrate(300);
+      } else if (response.data == 'INPUT SCAN NOT FOUND') {
+        loading.dismiss();
+        // await successAlert()
+        await warningToast('The packet was never input scanned', 2000);
+        await hapticsVibrate(100);
+      } else if (response.data[0] == 'PACKET FOLLOWS FIFO') {
+        loading.dismiss();
+        // await successAlert()
+        await successToast(
+          //add quantity type
+          `Successfully Scanned now ${response.data[1].curr_unit}  ${response.data[1].itemID.unitForMeasure} remaining out of  ${response.data[1].unitChange}  ${response.data[1].itemID.unitForMeasure} `
+        );
+        await hapticsVibrate(100);
+      } else if (response.data[0] == 'PACKET DOES NOT FOLLOW FIFO') {
+        loading.dismiss();
+        await hapticsVibrate(300);
+        await noFifoAlert(response.data[1]);
+      } else if (
+        response.status == 201 &&
+        outscanType.value == 'used' &&
+        response.data[0] == 'PACKET SENT TO USED PILE'
+      ) {
+        loading.dismiss();
+        await hapticsVibrate(300);
+        await warningToast('Usage recorded', 2000);
+      } else if (
+        response.status == 201 &&
+        outscanType.value == 'wasted' &&
+        response.data[0] == 'PACKET SENT TO WASTED PILE'
+      ) {
+        loading.dismiss();
+        await hapticsVibrate(300);
+        await warningToast('Wastage recorded', 2000);
+      } else if (
+        response.status == 201 &&
+        outscanType.value == 'output' &&
+        fifoOverride.value == true
+      ) {
+        loading.dismiss();
+        await hapticsVibrate(300);
+        await successToast('FIFO OVERRIDE DONE', 2000);
+      }
+    };
     const existsAlert = async () => {
       const alert = await alertController.create({
         cssClass: 'exists-alert',
@@ -372,6 +464,7 @@ export default defineComponent({
         assetId: 'error',
         // time: 6.0 - seek time
       });
+
       const alert = await alertController.create({
         cssClass: 'noFifo-alert',
         header: 'Alert',
@@ -460,18 +553,22 @@ export default defineComponent({
     };
     const stopScan = async () => {
       showOrNot.value = false;
+      console.log('stopScan called' + showOrNot.value);
       await BarcodeScanner.showBackground();
       await BarcodeScanner.stopScan();
       keyVal.value += 1;
     };
     const stopScanBtn = async () => {
       showOrNot.value = false;
+      console.log('stopScanBtn called' + showOrNot.value);
       await BarcodeScanner.showBackground();
       await BarcodeScanner.stopScan();
       router.replace({ path: '/tabs/tab2' });
     };
     const stopScanBack = async () => {
       showOrNot.value = false;
+      console.log('stopScanBack called' + showOrNot.value);
+
       BarcodeScanner.showBackground();
       await BarcodeScanner.stopScan();
       await BarcodeScanner.stopScan();
@@ -493,6 +590,8 @@ export default defineComponent({
       surroundCover,
       IonButton,
       currentOption,
+      submit,
+      inputValue,
     };
   },
 });
@@ -587,10 +686,20 @@ body,
   width: 100%;
   position: absolute;
   z-index: 10;
-  top: 90%;
+  top: 80%;
   margin-right: auto;
   left: 0;
   right: 0;
+  text-align: center;
+}
+.goback {
+  width: 20%;
+  position: absolute;
+  z-index: 15;
+  top: -500px;
+  margin-right: auto;
+
+  left: 16px;
   text-align: center;
 }
 
