@@ -17,6 +17,7 @@
           <ion-button @click="submit">update</ion-button>
         </ion-item>
         <ion-button class="goback" @click="stopScanBtn">GO BACK</ion-button>
+        <!-- <ion-button class="refresh" @click="startScan">NEW SCAN</ion-button> -->
       </div>
       <div class="barcode-scanner--area--container">
         <div class="relative">
@@ -92,6 +93,8 @@ export default defineComponent({
     const keyVal = ref(1);
 
     const showOrNot = ref(false);
+
+    const currentUnit = ref(0);
 
     const store = useStore();
 
@@ -309,16 +312,17 @@ export default defineComponent({
               await successToast('FIFO OVERRIDE DONE', 2000);
             }
           } else if (inOrOut.value == 'usage') {
-            console.log('the message here is :', currentOption.value);
+            // console.log('the message here is :', currentOption.value);
             //call out axios call function
-
+            currentUnit.value = retVal.unitChange;
             await warningToast(
               //add quantity type
 
               'Enter the no of quantity' +
                 // retVal.unitForMeasurement +
                 ' used out of ' +
-                retVal.unitChange +
+                currentUnit.value +
+                ' ' +
                 retVal.unitForMeasurement,
               4000
             );
@@ -374,6 +378,10 @@ export default defineComponent({
       );
       const loading = await presentLoading();
       resval.value = response.status;
+
+      currentUnit.value = response.data[1].curr_unit;
+
+      console.log(currentUnit.value + 'current unit');
       console.log(resval.value);
       console.log('usage response: ', response.data);
       if (response.data == 'EXISTS') {
@@ -386,6 +394,14 @@ export default defineComponent({
         // await existsAlert()
         await warningToast('Item is used ');
         await hapticsVibrate(300);
+      } else if (
+        response.data ==
+        'used cannot be more than current unit or less than curr_unit'
+      ) {
+        loading.dismiss();
+        // await existsAlert()
+        await warningToast('value cannot be more or less than current units ');
+        await hapticsVibrate(300);
       } else if (response.data == 'INPUT SCAN NOT FOUND') {
         loading.dismiss();
         // await successAlert()
@@ -396,7 +412,7 @@ export default defineComponent({
         // await successAlert()
         await successToast(
           //add quantity type
-          `Successfully Scanned now ${response.data[1].curr_unit}  ${response.data[1].itemID.unitForMeasure} remaining out of  ${response.data[1].unitChange}  ${response.data[1].itemID.unitForMeasure} `
+          `Successfully Scanned now ${response.data[1].curr_unit}  ${usageRetVal.value.unitForMeasurement} remaining out of  ${response.data[1].unitChange}  ${usageRetVal.value.unitForMeasurement} `
         );
         await hapticsVibrate(100);
       } else if (response.data[0] == 'PACKET DOES NOT FOLLOW FIFO') {
@@ -428,6 +444,8 @@ export default defineComponent({
         await hapticsVibrate(300);
         await successToast('FIFO OVERRIDE DONE', 2000);
       }
+      loading.dismiss();
+      startScan();
     };
     const existsAlert = async () => {
       const alert = await alertController.create({
@@ -592,6 +610,7 @@ export default defineComponent({
       currentOption,
       submit,
       inputValue,
+      currentUnit,
     };
   },
 });
@@ -700,6 +719,16 @@ body,
   margin-right: auto;
 
   left: 16px;
+  text-align: center;
+}
+.refresh {
+  width: 20%;
+  position: absolute;
+  z-index: 15;
+  top: -500px;
+  margin-right: auto;
+
+  left: 200px;
   text-align: center;
 }
 
